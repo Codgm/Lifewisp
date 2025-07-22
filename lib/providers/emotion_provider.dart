@@ -1,31 +1,41 @@
 import 'package:flutter/material.dart';
 import '../models/emotion_record.dart';
+import '../services/local_storage_service.dart';
 
 class EmotionProvider with ChangeNotifier {
-  final List<EmotionRecord> _records = [
-    EmotionRecord(date: DateTime.now(), emotion: 'happy', diary: '오늘은 정말 행복했어!'),
-    EmotionRecord(date: DateTime.now().subtract(Duration(days: 1)), emotion: 'sad', diary: '어제는 조금 우울했어.'),
-    EmotionRecord(date: DateTime.now().subtract(Duration(days: 2)), emotion: 'angry', diary: '그저께는 화가 났어.'),
-    EmotionRecord(date: DateTime.now().subtract(Duration(days: 3)), emotion: 'love', diary: '사랑이 넘치는 하루!'),
-    EmotionRecord(date: DateTime.now().subtract(Duration(days: 4)), emotion: 'fear', diary: '조금 불안했던 하루.'),
-  ];
+  final List<EmotionRecord> _records = [];
+  final LocalStorageService _storage = LocalStorageService();
+  bool _initialized = false;
 
   List<EmotionRecord> get records => _records;
+  bool get initialized => _initialized;
 
-  void addRecord(EmotionRecord record) {
+  // 앱 시작 시 호출: LocalStorage에서 데이터 불러오기
+  Future<void> loadRecords() async {
+    final loaded = await _storage.loadEmotionRecords();
+    _records.clear();
+    _records.addAll(loaded);
+    _initialized = true;
+    notifyListeners();
+  }
+
+  Future<void> addRecord(EmotionRecord record) async {
     _records.add(record);
+    await _storage.saveEmotionRecords(_records);
     notifyListeners();
   }
 
-  void deleteRecord(EmotionRecord record) {
+  Future<void> deleteRecord(EmotionRecord record) async {
     _records.remove(record);
+    await _storage.saveEmotionRecords(_records);
     notifyListeners();
   }
 
-  void editRecord(EmotionRecord oldRecord, EmotionRecord newRecord) {
+  Future<void> editRecord(EmotionRecord oldRecord, EmotionRecord newRecord) async {
     final idx = _records.indexOf(oldRecord);
     if (idx != -1) {
       _records[idx] = newRecord;
+      await _storage.saveEmotionRecords(_records);
       notifyListeners();
     }
   }

@@ -11,17 +11,13 @@ import 'screens/calendar_screen.dart';
 import 'screens/character_screen.dart';
 import 'screens/reflection_screen.dart';
 import 'screens/share_screen.dart';
-import 'screens/emotion_detail_screen.dart';
-import 'screens/dashboard_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/diary_list_screen.dart';
 import 'screens/diary_detail_screen.dart';
-import 'screens/diary_edit_screen.dart';
 import 'screens/analysis_screen.dart';
 import 'utils/theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,7 +37,7 @@ class MyApp extends StatelessWidget {
         title: 'Lifewisp',
         theme: appTheme, // utils/theme.dart의 테마를 전체에 적용
         debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
+        home: const AppInitializer(),
         routes: {
           '/splash': (_) => SplashScreen(),
           '/onboarding': (_) => OnboardingScreen(),
@@ -55,10 +51,42 @@ class MyApp extends StatelessWidget {
           '/login': (_) => const LoginScreen(),
           '/signup': (_) => const SignUpScreen(),
           '/profile': (_) => const ProfileScreen(),
-          '/emotion_detail': (_) => EmotionDetailScreen(),
         },
       ),
     );
+  }
+}
+
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({Key? key}) : super(key: key);
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final emotionProvider = Provider.of<EmotionProvider>(context, listen: false);
+    await emotionProvider.loadRecords();
+    setState(() {
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return SplashScreen();
+    }
+    return MainNavigation();
   }
 }
 
@@ -176,29 +204,13 @@ class DashboardScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => DiaryEditScreen()),
-            ),
-            child: Text('일기 편집'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.push(
-              context,
               MaterialPageRoute(builder: (_) => AnalysisScreen()),
             ),
             child: Text('분석 화면'),
           ),
           ElevatedButton(
             onPressed: () {
-              final dummyRecord = EmotionRecord(
-                date: DateTime.now(),
-                emotion: 'happy',
-                diary: '더미 감정 일기입니다.',
-              );
-              Navigator.pushNamed(
-                context,
-                '/emotion_detail',
-                arguments: dummyRecord,
-              );
+              // 감정 상세 테스트 버튼 제거
             },
             child: Text('감정 상세'),
           ),

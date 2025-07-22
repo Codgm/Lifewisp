@@ -10,7 +10,6 @@ class ResultScreen extends StatelessWidget {
     final mainEmotion = '😊';
     final keywords = ['#위로', '#책읽기'];
     final summary = '스스로를 위로하며 잘 버틴 하루였어요.';
-    final color = const Color(0xFFFFF9C4);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6FF), // 더 부드러운 배경색

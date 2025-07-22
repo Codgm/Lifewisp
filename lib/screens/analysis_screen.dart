@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/emotion_provider.dart';
 import '../utils/emotion_utils.dart';
 import 'dart:math';
-import 'dart:ui' as ui;
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/rabbit_emoticon.dart';
 

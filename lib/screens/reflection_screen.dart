@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:math';
 import '../widgets/rabbit_emoticon.dart';
+import '../providers/emotion_provider.dart';
+import 'package:provider/provider.dart';
+import '../models/emotion_record.dart';
 
 class ReflectionScreen extends StatefulWidget {
   const ReflectionScreen({Key? key}) : super(key: key);
@@ -190,25 +192,7 @@ class _ReflectionScreenState extends State<ReflectionScreen>
     );
   }
 
-  Widget _buildAIReflectionCard() {
-    final aiComments = [
-      '이번 달 당신은 감정을 회피하지 않고, 스스로를 잘 돌보았습니다. 앞으로도 감정에 솔직한 하루를 응원해요!',
-      '감정의 변화를 받아들이며 성장하는 모습이 인상적이었어요. 자신만의 감정 패턴을 찾아가고 있네요.',
-      '힘든 순간에도 꾸준히 기록하며 자신과 마주하는 용기가 멋져요. 감정 여행을 계속해나가세요!',
-      '다양한 감정을 경험하며 균형잡힌 마음가짐을 유지하고 있어요. 자신을 잘 알아가고 있습니다.',
-    ];
-
-    final keywords = [
-      ['#성장', '#솔직함', '#회고'],
-      ['#균형', '#수용', '#인내'],
-      ['#용기', '#지속', '#발견'],
-      ['#조화', '#이해', '#발전'],
-    ];
-
-    final random = Random();
-    final selectedComment = aiComments[random.nextInt(aiComments.length)];
-    final selectedKeywords = keywords[random.nextInt(keywords.length)];
-
+  Widget _buildAIReflectionCard(String aiComment) {
     return TweenAnimationBuilder(
       duration: const Duration(milliseconds: 800),
       tween: Tween<double>(begin: 0.0, end: 1.0),
@@ -274,44 +258,13 @@ class _ReflectionScreenState extends State<ReflectionScreen>
                       width: 1,
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selectedComment,
-                        style: GoogleFonts.jua(
-                          fontSize: 15,
-                          color: Colors.white,
-                          height: 1.6,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: selectedKeywords.map((keyword) =>
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                keyword,
-                                style: GoogleFonts.jua(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            )).toList(),
-                      ),
-                    ],
+                  child: Text(
+                    aiComment,
+                    style: GoogleFonts.jua(
+                      fontSize: 15,
+                      color: Colors.white,
+                      height: 1.6,
+                    ),
                   ),
                 ),
               ],
@@ -347,40 +300,58 @@ class _ReflectionScreenState extends State<ReflectionScreen>
     }
   }
 
-  Widget _buildEmotionSummaryCard() {
-    final emotionStats = [
-      {
-        'emoji': '😊',
-        'label': '행복',
-        'percentage': '32%',
-        'color': const Color(0xFFFFB74D)
-      },
-      {
-        'emoji': '😔',
-        'label': '슬픔',
-        'percentage': '18%',
-        'color': const Color(0xFF64B5F6)
-      },
-      {
-        'emoji': '😤',
-        'label': '화남',
-        'percentage': '15%',
-        'color': const Color(0xFFE57373)
-      },
-      {
-        'emoji': '😰',
-        'label': '불안',
-        'percentage': '22%',
-        'color': const Color(0xFF9575CD)
-      },
-      {
-        'emoji': '😴',
-        'label': '피곤',
-        'percentage': '13%',
-        'color': const Color(0xFF81C784)
-      },
-    ];
+  RabbitEmotion _mapStringToRabbitEmotion(String key) {
+    switch (key) {
+      case 'happy':
+      case '행복':
+      case '😊':
+        return RabbitEmotion.happy;
+      case 'sad':
+      case '슬픔':
+      case '😢':
+        return RabbitEmotion.sad;
+      case 'angry':
+      case '분노':
+      case '😤':
+        return RabbitEmotion.angry;
+      case 'excited':
+      case '흥분':
+      case '🤩':
+        return RabbitEmotion.excited;
+      case 'calm':
+      case '평온':
+      case '😌':
+        return RabbitEmotion.calm;
+      case 'anxious':
+      case '불안':
+      case '😰':
+        return RabbitEmotion.anxious;
+      case 'love':
+      case '사랑':
+      case '🥰':
+        return RabbitEmotion.love;
+      case 'tired':
+      case '피곤':
+      case '😴':
+        return RabbitEmotion.tired;
+      case 'despair':
+      case '절망':
+      case '😭':
+        return RabbitEmotion.despair;
+      default:
+        return RabbitEmotion.happy;
+    }
+  }
 
+  Widget _buildEmotionSummaryCard(Map<String, int> emotionCounts, int total) {
+    final emotionStats = [
+      {'emoji': '😊', 'label': '행복', 'key': 'happy', 'color': const Color(0xFFFFB74D)},
+      {'emoji': '😢', 'label': '슬픔', 'key': 'sad', 'color': const Color(0xFF64B5F6)},
+      {'emoji': '😤', 'label': '분노', 'key': 'angry', 'color': const Color(0xFFE57373)},
+      {'emoji': '😰', 'label': '불안', 'key': 'anxious', 'color': const Color(0xFF9575CD)},
+      {'emoji': '😴', 'label': '피곤', 'key': 'tired', 'color': const Color(0xFF81C784)},
+      {'emoji': '🥰', 'label': '사랑', 'key': 'love', 'color': const Color(0xFFFF8FA3)},
+    ];
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -440,87 +411,121 @@ class _ReflectionScreenState extends State<ReflectionScreen>
               ),
             ),
             child: Column(
-              children: emotionStats.map((stat) =>
-                  TweenAnimationBuilder(
-                    duration: Duration(milliseconds: 600 +
-                        (stat['emoji'] as String).hashCode % 400),
-                    tween: Tween<double>(begin: 0.0, end: 1.0),
-                    builder: (context, value, child) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: RabbitEmoticon(
-                                  emotion: _mapLabelToRabbitEmotion(stat['label'] as String),
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    stat['label'] as String,
-                                    style: GoogleFonts.jua(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    height: 6,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                    child: FractionallySizedBox(
-                                      alignment: Alignment.centerLeft,
-                                      widthFactor: value * (int.parse(
-                                          (stat['percentage'] as String)
-                                              .replaceAll('%', '')) / 100),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: stat['color'] as Color,
-                                          borderRadius: BorderRadius.circular(
-                                              3),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              stat['percentage'] as String,
-                              style: GoogleFonts.jua(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
+              children: emotionStats.map((stat) {
+                final count = emotionCounts[stat['key']] ?? 0;
+                final percent = total > 0 ? (count / total * 100).toInt() : 0;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: ((stat['color'] as Color?) ?? Colors.grey).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      );
-                    },
-                  )
-              ).toList(),
+                        child: Center(
+                          child: Text(stat['emoji'] as String, style: const TextStyle(fontSize: 20)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          stat['label'] as String,
+                          style: GoogleFonts.jua(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '$percent%',
+                        style: GoogleFonts.jua(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: stat['color'] as Color,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRecentEmotionChart(List recent7) {
+    final days = ['월', '화', '수', '목', '금', '토', '일'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '최근 7일 감정 변화',
+          style: GoogleFonts.jua(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF2D3748),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(7, (index) {
+                final record = recent7[index];
+                return Column(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF6B73FF).withOpacity(0.1),
+                      ),
+                      child: Center(
+                        child: record != null
+                            ? RabbitEmoticon(
+                                emotion: _mapStringToRabbitEmotion(record.emotion),
+                                size: 30,
+                              )
+                            : const Text('-', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      days[index],
+                      style: GoogleFonts.jua(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF4A5568),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -899,9 +904,57 @@ class _ReflectionScreenState extends State<ReflectionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final records = Provider.of<EmotionProvider>(context).records;
     final month = DateTime.now().month;
     final monthNames = ['', '1월', '2월', '3월', '4월', '5월', '6월',
       '7월', '8월', '9월', '10월', '11월', '12월'];
+    // 이번 달 기록만 추출
+    final now = DateTime.now();
+    final monthRecords = records.where((r) => r.date.year == now.year && r.date.month == now.month).toList();
+    // 감정별 카운트
+    final Map<String, int> emotionCounts = {};
+    for (final r in monthRecords) {
+      emotionCounts[r.emotion] = (emotionCounts[r.emotion] ?? 0) + 1;
+    }
+    // 최근 7일 감정 변화
+    final recent7 = List.generate(7, (i) {
+      final day = now.subtract(Duration(days: 6 - i));
+      return records.firstWhere(
+        (r) => r.date.year == day.year && r.date.month == day.month && r.date.day == day.day,
+        orElse: () => EmotionRecord(date: DateTime(2000), emotion: '', diary: ''),
+      );
+    });
+    // 가장 많이 기록된 감정
+    String? topEmotion;
+    int maxCount = 0;
+    emotionCounts.forEach((k, v) {
+      if (v > maxCount) {
+        topEmotion = k;
+        maxCount = v;
+      }
+    });
+    // AI 회고 코멘트 예시(실제 AI 연동 전까지)
+    String aiComment = '';
+    if (topEmotion != null) {
+      switch (topEmotion) {
+        case 'happy':
+          aiComment = '이번 달은 긍정적인 감정이 많았어요! 행복한 순간을 잘 기록하셨네요.';
+          break;
+        case 'sad':
+          aiComment = '이번 달은 슬픔이 많았어요. 힘든 순간도 잘 기록해주셨어요.';
+          break;
+        case 'angry':
+          aiComment = '분노의 감정이 두드러졌어요. 감정을 솔직하게 표현한 점이 멋져요!';
+          break;
+        case 'love':
+          aiComment = '사랑이 가득한 한 달이었네요! 따뜻한 기록이 많아요.';
+          break;
+        default:
+          aiComment = '다양한 감정이 골고루 나타났어요. 꾸준한 기록이 성장의 밑거름입니다!';
+      }
+    } else {
+      aiComment = '아직 이번 달 감정 기록이 없어요. 오늘부터 감정을 기록해보세요!';
+    }
 
     return Scaffold(
       body: Container(
@@ -935,9 +988,11 @@ class _ReflectionScreenState extends State<ReflectionScreen>
                       const SizedBox(height: 20),
                       _buildMonthlyHeader(monthNames[month]),
                       const SizedBox(height: 20),
-                      _buildAIReflectionCard(),
+                      _buildAIReflectionCard(aiComment),
                       const SizedBox(height: 20),
-                      _buildEmotionSummaryCard(),
+                      _buildEmotionSummaryCard(emotionCounts, monthRecords.length),
+                      const SizedBox(height: 20),
+                      _buildRecentEmotionChart(recent7),
                       const SizedBox(height: 20),
                       _buildGrowthInsights(),
                       const SizedBox(height: 20),

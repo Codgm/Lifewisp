@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/emotion_record.dart';
 import '../widgets/growth_tree.dart';
 import '../widgets/rabbit_emoticon.dart';
+import '../providers/emotion_provider.dart';
+import 'package:provider/provider.dart';
 
 class CharacterScreen extends StatefulWidget {
   const CharacterScreen({Key? key}) : super(key: key);
@@ -48,11 +51,56 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final records = Provider.of<EmotionProvider>(context).records;
+    // 성장 단계: 감정 기록 수에 따라 결정
+    int recordCount = records.length;
+    int currentLevel = 1;
+    if (recordCount >= 30) {
+      currentLevel = 5;
+    } else if (recordCount >= 20) {
+      currentLevel = 4;
+    } else if (recordCount >= 10) {
+      currentLevel = 3;
+    } else if (recordCount >= 5) {
+      currentLevel = 2;
+    }
+    GrowthStage currentGrowthStage;
+    switch (currentLevel) {
+      case 1:
+        currentGrowthStage = GrowthStage.seed;
+        break;
+      case 2:
+        currentGrowthStage = GrowthStage.sprout;
+        break;
+      case 3:
+        currentGrowthStage = GrowthStage.sapling;
+        break;
+      case 4:
+        currentGrowthStage = GrowthStage.tree;
+        break;
+      case 5:
+      default:
+        currentGrowthStage = GrowthStage.blossom;
+        break;
+    }
+    // 최근 7일 감정 변화
+    final now = DateTime.now();
+    final recent7 = List.generate(7, (i) {
+      final day = now.subtract(Duration(days: 6 - i));
+      return records.firstWhere(
+        (r) => r.date.year == day.year && r.date.month == day.month && r.date.day == day.day,
+        orElse: () => EmotionRecord(date: DateTime(2000), emotion: '', diary: ''),
+      );
+    });
+    // 감정별 카운트(전체)
+    final Map<String, int> emotionCounts = {};
+    for (final r in records) {
+      emotionCounts[r.emotion] = (emotionCounts[r.emotion] ?? 0) + 1;
+    }
+
     // 더미 데이터
-    final characterName = '감정을 마주하는 토끼';
     final description = '감정을 솔직하게 바라보고, 성장하는 당신을 닮은 캐릭터입니다.';
     final growthMsg = '이번 달 당신은 감정을 회피하지 않았어요!';
-    final emotionData = ['😊', '😢', '😤', '😌', '🥰', '😴', '🤔'];
 
     return Scaffold(
       body: Container(
@@ -87,28 +135,59 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       const SizedBox(height: 20),
 
                       // 성장 트리 섹션
-                      _buildGrowthTreeSection(),
-
+                      GrowthTreeWidget(
+                        stage: currentGrowthStage,
+                        size: 120,
+                        onTap: () {},
+                      ),
+                      const SizedBox(height: 12),
+                      // 성장 단계 설명
+                      Text(
+                        stageDescription,
+                        style: GoogleFonts.jua(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF4A5568),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF6B73FF),
+                              const Color(0xFF9F7AEA),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6B73FF).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Level $currentLevel ✨',
+                          style: GoogleFonts.jua(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 24),
-
-                      // 설명 카드
                       _buildDescriptionCard(description, growthMsg),
-
                       const SizedBox(height: 24),
-
                       // 감정 통계 섹션
-                      _buildEmotionStatsSection(),
-
+                      _buildEmotionStatsSection(emotionCounts, records.length),
                       const SizedBox(height: 20),
-
                       // 최근 감정 변화 섹션
-                      _buildEmotionChartSection(emotionData),
-
+                      _buildEmotionChartSection(recent7),
                       const SizedBox(height: 24),
-
-                      // 성장 배지 섹션
                       _buildGrowthBadgesSection(),
-
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -326,7 +405,15 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
   }
 
-  Widget _buildEmotionStatsSection() {
+  Widget _buildEmotionStatsSection(Map<String, int> emotionCounts, int total) {
+    final emotionStats = [
+      {'emoji': '😊', 'label': '행복', 'key': 'happy', 'color': const Color(0xFFFFB74D)},
+      {'emoji': '😢', 'label': '슬픔', 'key': 'sad', 'color': const Color(0xFF64B5F6)},
+      {'emoji': '😤', 'label': '분노', 'key': 'angry', 'color': const Color(0xFFE57373)},
+      {'emoji': '😰', 'label': '불안', 'key': 'anxious', 'color': const Color(0xFF9575CD)},
+      {'emoji': '😴', 'label': '피곤', 'key': 'tired', 'color': const Color(0xFF81C784)},
+      {'emoji': '🥰', 'label': '사랑', 'key': 'love', 'color': const Color(0xFFFF8FA3)},
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -355,12 +442,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
             padding: const EdgeInsets.all(20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('😊', '행복', '42%', const Color(0xFFFFB800)),
-                _buildStatItem('😌', '평온', '28%', const Color(0xFF6B73FF)),
-                _buildStatItem('😢', '슬픔', '18%', const Color(0xFF7C3AED)),
-                _buildStatItem('😤', '화남', '12%', const Color(0xFFEF4444)),
-              ],
+              children: emotionStats.map((stat) {
+                final count = emotionCounts[stat['key']] ?? 0;
+                final percent = total > 0 ? (count / total * 100).toInt() : 0;
+                return _buildStatItem(stat['emoji'] as String, stat['label'] as String, '$percent%', stat['color'] as Color);
+              }).toList(),
             ),
           ),
         ),
@@ -407,7 +493,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
   }
 
-  Widget _buildEmotionChartSection(List<String> emotionData) {
+  Widget _buildEmotionChartSection(List recent7) {
+    final days = ['월', '화', '수', '목', '금', '토', '일'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -434,56 +521,40 @@ class _CharacterScreenState extends State<CharacterScreen> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(7, (index) {
-                    final days = ['월', '화', '수', '목', '금', '토', '일'];
-                    return Column(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF6B73FF).withOpacity(0.1),
-                          ),
-                          child: Center(
-                            child: RabbitEmoticon(
-                              emotion: _mapStringToRabbitEmotion(emotionData[index]),
-                              size: 30, // 기존 18 → 30
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          days[index],
-                          style: GoogleFonts.jua(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF4A5568),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  height: 4,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF6B73FF).withOpacity(0.3),
-                        const Color(0xFF6B73FF),
-                        const Color(0xFF9F7AEA),
-                      ],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(7, (index) {
+                final record = recent7[index];
+                return Column(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF6B73FF).withOpacity(0.1),
+                      ),
+                      child: Center(
+                        child: record != null
+                            ? RabbitEmoticon(
+                                emotion: _mapStringToRabbitEmotion(record.emotion),
+                                size: 30,
+                              )
+                            : const Text('-', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ],
+                    const SizedBox(height: 8),
+                    Text(
+                      days[index],
+                      style: GoogleFonts.jua(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF4A5568),
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
           ),
         ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/emotion_provider.dart';
-import '../utils/emotion_utils.dart';
-import 'dart:math';
 import '../widgets/rabbit_emoticon.dart';
+import 'package:provider/provider.dart';
+import '../models/emotion_record.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({Key? key}) : super(key: key);
@@ -132,6 +132,7 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final records = Provider.of<EmotionProvider>(context).records;
     final screenSize = MediaQuery.of(context).size;
     final screenWidth = screenSize.width;
     final screenHeight = screenSize.height;
@@ -503,18 +504,17 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
   }
 
   Widget _buildCalendarGrid(double screenWidth) {
+    final records = Provider.of<EmotionProvider>(context).records;
     return LayoutBuilder(
       builder: (context, constraints) {
         double availableWidth = constraints.maxWidth;
-        double cellSize = (availableWidth - 48) / 7; // 좌우 여백 및 간격 고려
-        double cellHeight = cellSize * 1.15; // 세로 비율 조정
-
-        // 최소/최대 크기 제한
+        double cellSize = (availableWidth - 48) / 7;
+        double cellHeight = cellSize * 1.15;
         cellSize = cellSize.clamp(32.0, 60.0);
         cellHeight = cellHeight.clamp(36.0, 70.0);
 
         return SizedBox(
-          height: cellHeight * 6, // 6주
+          height: cellHeight * 6,
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -535,11 +535,13 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
                 return const SizedBox();
               }
 
-              // 더미 감정 데이터
-              final hasEmotion = Random().nextBool();
-              final emotions = emotionData.keys.toList();
-              final randomEmotion = emotions[Random().nextInt(emotions.length)];
-              final emotionInfo = hasEmotion ? emotionData[randomEmotion] : null;
+              // 실제 기록 데이터에서 해당 날짜의 감정 찾기
+              final record = records.firstWhere(
+                (r) => r.date.year == selectedDate.year && r.date.month == selectedDate.month && r.date.day == dayNum,
+                orElse: () => EmotionRecord(date: DateTime(2000), emotion: '', diary: ''),
+              );
+              final emotion = record.emotion;
+              final emotionInfo = emotion != null ? emotionData[emotion] : null;
 
               final isToday = dayNum == DateTime.now().day &&
                   selectedDate.month == DateTime.now().month &&
@@ -547,9 +549,7 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
 
               return GestureDetector(
                 onTap: () {
-                  setState(() {
-                    // 상세 정보 보기 등 추가 구현
-                  });
+                  // 상세 정보 보기 등 추가 구현 가능
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -589,7 +589,7 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
                             height: (cellSize * 0.48).clamp(12.0, 24.0),
                             child: FittedBox(
                               fit: BoxFit.contain,
-                              child: RabbitEmoticon(emotion: _mapStringToRabbitEmotion(randomEmotion)),
+                              child: RabbitEmoticon(emotion: _mapStringToRabbitEmotion(emotion ?? '')),
                             ),
                           ),
                         ),
@@ -605,9 +605,20 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
   }
 
   Widget _buildEmotionStatistics(double screenWidth) {
+    final records = Provider.of<EmotionProvider>(context).records;
     final titleFontSize = _getResponsiveFontSize(screenWidth, 16.0);
     final itemFontSize = _getResponsiveFontSize(screenWidth, 14.0);
     final percentageFontSize = _getResponsiveFontSize(screenWidth, 12.0);
+
+    // 이번 달 감정별 카운트 계산
+    final Map<String, int> emotionCounts = {};
+    int total = 0;
+    for (final r in records) {
+      if (r.date.year == selectedDate.year && r.date.month == selectedDate.month) {
+        emotionCounts[r.emotion] = (emotionCounts[r.emotion] ?? 0) + 1;
+        total++;
+      }
+    }
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -644,13 +655,11 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
               ],
             ),
             SizedBox(height: screenWidth > 600 ? 20 : 16),
-
-            // 감정 통계 바
             ...emotionData.entries.take(4).map((entry) {
               final emotion = entry.key;
               final data = entry.value;
-              final percentage = Random().nextDouble() * 0.8 + 0.1;
-
+              final count = emotionCounts[emotion] ?? 0;
+              final percentage = total > 0 ? count / total : 0.0;
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: Column(

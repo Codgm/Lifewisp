@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import '../widgets/rabbit_emoticon.dart';
 
 class OnboardingScreen extends StatefulWidget {
