@@ -1,5 +1,5 @@
 name: lifewisp
-description: "당신의 하루를 감정으로 기록하고, AI와 함께 회고하는 라이프 아카이빙 도구"
+description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.1
+  sdk: '>=3.1.3 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -30,21 +30,53 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.6
+  http: ^1.1.0
   shared_preferences: ^2.2.2
-  google_fonts: ^4.0.4
+  google_fonts: ^6.1.0
   provider: ^6.1.1
-  intl: ^0.18.1
+  intl: ^0.20.2
   fl_chart: ^0.65.0
   path_provider: ^2.1.1
-  permission_handler: ^11.0.1
-  gallery_saver: ^2.1.0
-  flutter_dotenv: ^5.0.0
-  # image_gallery_saver: ^2.0.3  # 제거
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  permission_handler: ^11.1.0
+  # gallery_saver: ^2.1.0  # http 버전 충돌로 제거
+  flutter_dotenv: ^5.1.0
+  flutter_svg: ^2.0.9
+  vector_math: ^2.1.4
+  flutter_animate: ^4.2.0+1
+  lottie: ^2.7.0
+  confetti: ^0.7.0
+  shimmer: ^3.0.0
+  flutter_staggered_animations: ^1.1.1
+  cached_network_image: ^3.3.0
+  image_picker: ^1.0.4
+  sqflite: ^2.3.0
+  uuid: ^4.2.1
+  crypto: ^3.0.3
+  json_annotation: ^4.8.1
+  http_parser: ^4.0.2
+  connectivity_plus: ^5.0.2
+  package_info_plus: ^4.2.0
+  device_info_plus: ^9.1.1
+  flutter_local_notifications: ^16.3.0
+  timezone: ^0.9.2
+  flutter_native_splash: ^2.3.8
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_timezone: ^2.0.0
+  flutter_secure_storage: ^9.0.0
+  flutter_markdown: ^0.6.18
+  url_launcher: ^6.2.1
+  share_plus: ^7.2.1
+  flutter_screenutil: ^5.9.0
+  flutter_staggered_grid_view: ^0.7.0
+  flutter_slidable: ^3.0.1
+  flutter_speed_dial: ^7.0.0
+  flutter_rating_bar: ^4.0.1
+  # flutter_slider: ^0.0.1  # null safety 미지원으로 제거
+  # flutter_calendar_carousel: ^2.3.3  # 오래된 패키지로 제거
+  table_calendar: ^3.0.9
+  # flutter_datetime_picker: ^1.5.1  # 오래된 패키지로 제거
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -55,7 +87,9 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -70,8 +104,10 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - .env
     - assets/emoticons/
+    - assets/animations/
+    - assets/images/
+    - .env
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

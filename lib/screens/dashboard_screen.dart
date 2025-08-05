@@ -1,9 +1,16 @@
+// screens/dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/emotion_provider.dart';
-import '../utils/emotion_utils.dart';
+import '../providers/subscription_provider.dart';
 import '../providers/user_provider.dart';
+import '../utils/emotion_utils.dart';
 import '../widgets/rabbit_emoticon.dart';
+import '../widgets/common_app_bar.dart';
+import '../widgets/premium_gate.dart';
+import 'diary_list_screen.dart';
+import '../utils/theme.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -81,172 +88,182 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final records = context.watch<EmotionProvider>().records;
-    final recent = records.isNotEmpty ? records.last : null;
+    final records = context.watch<EmotionProvider>().records.reversed.toList();
+    final subscription = context.watch<SubscriptionProvider>();
+    final userProvider = context.watch<UserProvider>();
+    final recent = records.isNotEmpty ? records.first : null;
     final emotion = recent?.emotion ?? '😊';
-    final color = emotionColor[emotion] ?? Colors.amber[100]!;
-    final emoji = emotionEmoji[emotion] ?? '😊';
+    final emoji = emotionEmojiString[emotion] ?? '😊';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [
-              Color(0xFFFF6B9D),
-              Color(0xFF9B59B6),
-            ],
-          ).createShader(bounds),
-          child: Text(
-            'Lifewisp',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: 1.0,
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
+      appBar: CommonAppBar(
+        title: '대시보드',
+        showBackButton: false,
         automaticallyImplyLeading: false,
         actions: [
-          Container(
-            margin: EdgeInsets.only(right: 16),
-            child: PopupMenuButton<String>(
-              icon: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFFFF6B9D),
-                      Color(0xFF9B59B6),
-                    ],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0xFFFF6B9D).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.account_circle,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              onSelected: (value) async {
-                if (value == 'profile') {
-                  Navigator.pushNamed(context, '/profile');
-                } else if (value == 'logout') {
-                  Provider.of<UserProvider>(context, listen: false).logout();
-                  Navigator.pushReplacementNamed(context, '/login');
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'profile',
-                  child: Row(
-                    children: [
-                      Icon(Icons.person_outline, color: Color(0xFF666666)),
-                      SizedBox(width: 12),
-                      Text('프로필'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'logout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout_rounded, color: Color(0xFF666666)),
-                      SizedBox(width: 12),
-                      Text('로그아웃'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildSubscriptionBadge(context, subscription, isDark),
         ],
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFE5F1), // 연한 핑크
-              Color(0xFFF0F8FF), // 연한 하늘색
-              Color(0xFFE8F5E8), // 연한 민트
-              Color(0xFFFFF8E1), // 연한 노랑
-            ],
-            stops: [0.0, 0.3, 0.7, 1.0],
-          ),
+          gradient: LifewispGradients.onboardingBgFor('emotion', dark: isDark),
         ),
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 인사말
+                  // 인사말 + 구독 상태 표시
                   SlideTransition(
                     position: _slideAnimation,
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
+                        color: isDark
+                            ? LifewispColors.darkCardBg.withOpacity(0.8)
+                            : LifewispColors.cardBg.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: isDark
+                                ? LifewispColors.darkCardShadow
+                                : LifewispColors.cardShadow,
                             blurRadius: 15,
                             offset: Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: _pulseAnimation.value,
-                                child: Text('👋', style: TextStyle(fontSize: 32)),
-                              );
-                            },
+                          Row(
+                            children: [
+                              AnimatedBuilder(
+                                animation: _pulseAnimation,
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: _pulseAnimation.value,
+                                    child: Text('👋', style: TextStyle(fontSize: 32)),
+                                  );
+                                },
+                              ),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '안녕하세요!',
+                                          style: TextStyle(
+                                            fontSize: userProvider.fontSize + 4,
+                                            fontFamily: userProvider.selectedFont,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark
+                                                ? LifewispColors.darkMainText
+                                                : LifewispColors.mainText,
+                                          ),
+                                        ),
+                                        if (subscription.isPremium) ...[
+                                          SizedBox(width: 8),
+                                          Container(
+                                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [LifewispColors.accent, LifewispColors.accentDark],
+                                              ),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              '✨ 프리미엄',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    Text(
+                                      subscription.isPremium
+                                          ? 'AI와 함께 더 깊이 있는 감정 분석을 시작해보세요!'
+                                          : '오늘은 어떤 하루를 보내셨나요?',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isDark
+                                            ? LifewispColors.darkSubText
+                                            : LifewispColors.subText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '안녕하세요!',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF333333),
+
+                          // 무료 사용자에게 AI 채팅 혜택 홍보
+                          if (subscription.isFree) ...[
+                            SizedBox(height: 16),
+                            GestureDetector(
+                              onTap: () => _showPremiumDialog(context, 'ai_chat'),
+                              child: Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      LifewispColors.accent.withOpacity(0.1),
+                                      LifewispColors.accentDark.withOpacity(0.1),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: LifewispColors.accent.withOpacity(0.3),
                                   ),
                                 ),
-                                Text(
-                                  '오늘은 어떤 하루를 보내셨나요?',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF666666),
-                                  ),
+                                child: Row(
+                                  children: [
+                                    Text('🤖', style: TextStyle(fontSize: 24)),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'AI 채팅으로 더 깊은 감정 분석을!',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: LifewispColors.accent,
+                                            ),
+                                          ),
+                                          Text(
+                                            '월 5회 무료 체험 • 프리미엄으로 무제한 이용',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: LifewispColors.subText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: LifewispColors.accent,
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
@@ -255,7 +272,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   SizedBox(height: 24),
 
                   // 오늘의 감정 섹션
-                  _buildSectionTitle('오늘의 감정', '✨'),
+                  _buildSectionTitle(context, '오늘의 감정', '✨'),
                   SizedBox(height: 12),
                   SlideTransition(
                     position: _slideAnimation,
@@ -265,14 +282,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            color.withOpacity(0.3),
-                            color.withOpacity(0.1),
+                            isDark
+                                ? LifewispColors.darkPrimary.withOpacity(0.3)
+                                : LifewispColors.accent.withOpacity(0.3),
+                            isDark
+                                ? LifewispColors.darkPrimary.withOpacity(0.1)
+                                : LifewispColors.accent.withOpacity(0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: color.withOpacity(0.2),
+                            color: isDark
+                                ? LifewispColors.darkPrimary.withOpacity(0.2)
+                                : LifewispColors.accent.withOpacity(0.2),
                             blurRadius: 20,
                             offset: Offset(0, 10),
                           ),
@@ -281,7 +304,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                       child: Container(
                         padding: EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: isDark
+                              ? LifewispColors.darkCardBg.withOpacity(0.9)
+                              : LifewispColors.cardBg.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Row(
@@ -298,22 +323,29 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       shape: BoxShape.circle,
                                       gradient: LinearGradient(
                                         colors: [
-                                          color,
-                                          color.withOpacity(0.7),
+                                          isDark
+                                              ? LifewispColors.darkPrimary
+                                              : LifewispColors.accent,
+                                          isDark
+                                              ? LifewispColors.darkPrimary.withOpacity(0.7)
+                                              : LifewispColors.accent.withOpacity(0.7),
                                         ],
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: color.withOpacity(0.3),
+                                          color: isDark
+                                              ? LifewispColors.darkPrimary.withOpacity(0.3)
+                                              : LifewispColors.accent.withOpacity(0.3),
                                           blurRadius: 12,
                                           offset: Offset(0, 6),
                                         ),
                                       ],
                                     ),
-                                    child: Center(
+                                    child: Container(
+                                      padding: EdgeInsets.all(12),
                                       child: RabbitEmoticon(
                                         emotion: _mapStringToRabbitEmotion(emoji),
-                                        size: 36,
+                                        size: 56,
                                       ),
                                     ),
                                   ),
@@ -330,7 +362,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF333333),
+                                      color: isDark
+                                          ? LifewispColors.darkMainText
+                                          : LifewispColors.mainText,
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -343,7 +377,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: color.withOpacity(0.2),
+                                        color: isDark
+                                            ? LifewispColors.darkPrimary.withOpacity(0.2)
+                                            : LifewispColors.accent.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(15),
                                       ),
                                       child: Text(
@@ -351,18 +387,51 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
-                                          color: Color(0xFF666666),
+                                          color: isDark
+                                              ? LifewispColors.darkSubText
+                                              : LifewispColors.subText,
                                         ),
+                                      ),
+                                    ),
+                                  SizedBox(height: 12),
+                                  // 오늘의 한마디 (프리미엄 사용자만)
+                                  if (subscription.isPremium)
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? LifewispColors.darkPurple.withOpacity(0.08)
+                                            : LifewispColors.purple.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                              Icons.lightbulb_outline_rounded,
+                                              color: isDark
+                                                  ? LifewispColors.darkPrimary
+                                                  : Color(0xFF6B73FF),
+                                              size: 20
+                                          ),
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'AI 추천: 긍정적인 마음으로 하루를 시작해보세요!',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: isDark
+                                                    ? LifewispColors.darkPrimary
+                                                    : Color(0xFF6B73FF),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                 ],
                               ),
                             ),
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              color: color,
-                              size: 20,
-                            ),
                           ],
                         ),
                       ),
@@ -371,110 +440,111 @@ class _DashboardScreenState extends State<DashboardScreen>
 
                   SizedBox(height: 32),
 
-                  // 빠른 액션 버튼들 (2x2 그리드)
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildQuickActionCard(
-                                emoji: '🌱',
-                                title: '감정 캐릭터',
-                                subtitle: '나의 감정 친구',
-                                colors: [Color(0xFFD0F4DE), Color(0xFFA8E6CF)],
-                                onTap: () => Navigator.pushNamed(context, '/character'),
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: _buildQuickActionCard(
-                                emoji: '📊',
-                                title: '감정 그래프',
-                                subtitle: '감정 분석 보기',
-                                colors: [Color(0xFFFFE5B4), Color(0xFFFFB366)],
-                                onTap: () => Navigator.pushNamed(context, '/analysis'),
-                              ),
-                            ),
-                          ],
+                  // 빠른 액션 카드 (AI 채팅 제거, 고급 분석 추가)
+                  _buildSectionTitle(context, '빠른 액션', '⚡️'),
+                  SizedBox(height: 12),
+
+                  // 내 감정 일기와 고급 분석을 나란히 배치
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildQuickActionCard(
+                          emoji: '📖',
+                          title: '내 감정 일기',
+                          subtitle: '기록한 감정 보기',
+                          colors: isDark
+                              ? [LifewispColors.darkPurple.withOpacity(0.3), LifewispColors.darkPurple]
+                              : [Color(0xFFEDE9FE), Color(0xFFD8B4FE)],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => DiaryListScreen()),
+                          ),
+                          isPremiumFeature: false,
                         ),
-                        SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildQuickActionCard(
-                                emoji: '📝',
-                                title: 'AI 회고',
-                                subtitle: '감정 분석 받기',
-                                colors: [Color(0xFFEDE9FE), Color(0xFFD8B4FE)],
-                                onTap: () => Navigator.pushNamed(context, '/reflection'),
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: _buildQuickActionCard(
-                                emoji: '📅',
-                                title: '감정 캘린더',
-                                subtitle: '월별 감정 보기',
-                                colors: [Color(0xFFE0F2FE), Color(0xFF81D4FA)],
-                                onTap: () => Navigator.pushNamed(context, '/calendar'),
-                              ),
-                            ),
-                          ],
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: _buildQuickActionCard(
+                          emoji: subscription.isPremium ? '📊' : '🔒',
+                          title: 'AI 고급 분석',
+                          subtitle: subscription.isPremium ? '감정 패턴 분석' : '프리미엄 전용',
+                          colors: subscription.isPremium
+                              ? (isDark
+                              ? [LifewispColors.darkSecondary.withOpacity(0.3), LifewispColors.darkSecondary]
+                              : [Color(0xFFFDE68A), Color(0xFFF59E0B)])
+                              : [Colors.grey.withOpacity(0.3), Colors.grey],
+                          onTap: subscription.isPremium
+                              ? () => Navigator.pushNamed(context, '/advanced_analysis')
+                              : () => _showPremiumDialog(context, 'advanced_analysis'),
+                          isPremiumFeature: true,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
 
-                  SizedBox(height: 24),
-
-                  // 메인 액션 버튼들 (오늘 감정 기록하기)
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: Container(
+                  // 무료 사용자 사용량 표시
+                  if (subscription.isFree) ...[
+                    SizedBox(height: 24),
+                    Container(
+                      padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFFF6B9D),
-                            Color(0xFF9B59B6),
-                          ],
+                        color: isDark
+                            ? LifewispColors.darkCardBg.withOpacity(0.8)
+                            : LifewispColors.cardBg.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
                         ),
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFFFF6B9D).withOpacity(0.4),
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.orange,
+                            size: 24,
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '무료 플랜 이용 중',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                                Text(
+                                  '월 ${subscription.maxRecordsPerMonth}회 기록 • AI 삼담 월 5회 • 현재 ${records.length}회 사용',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDark
+                                        ? LifewispColors.darkSubText
+                                        : LifewispColors.subText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pushNamed(context, '/subscription'),
+                            child: Text(
+                              '업그레이드',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      child: ElevatedButton.icon(
-                        onPressed: () => Navigator.pushNamed(context, '/chat'),
-                        icon: Icon(Icons.add_comment_rounded, color: Colors.white),
-                        label: Text(
-                          '오늘 감정 기록하기',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                      ),
                     ),
-                  ),
+                  ],
 
-                  SizedBox(height: 32),
+                  // Bottom navigation bar를 위한 추가 공간
+                  SizedBox(height: 100),
                 ],
               ),
             ),
@@ -484,7 +554,57 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildSectionTitle(String title, String emoji) {
+  Widget _buildSubscriptionBadge(BuildContext context, SubscriptionProvider subscription, bool isDark) {
+    if (subscription.isFree) {
+      return Container(
+        margin: EdgeInsets.only(right: 16),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        ),
+        child: Text(
+          'FREE',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.orange,
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        margin: EdgeInsets.only(right: 16),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [LifewispColors.accent, LifewispColors.accentDark],
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('✨', style: TextStyle(fontSize: 12)),
+            SizedBox(width: 4),
+            Text(
+              'PRO',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title, String emoji) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Text(
@@ -497,7 +617,9 @@ class _DashboardScreenState extends State<DashboardScreen>
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF333333),
+            color: isDark
+                ? LifewispColors.darkMainText
+                : LifewispColors.mainText,
           ),
         ),
       ],
@@ -510,7 +632,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     required String subtitle,
     required List<Color> colors,
     required VoidCallback onTap,
+    required bool isPremiumFeature,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subscription = context.watch<SubscriptionProvider>();
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedBuilder(
@@ -542,10 +668,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                     height: 50,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.8),
+                      color: isDark
+                          ? LifewispColors.darkCardBg.withOpacity(0.8)
+                          : LifewispColors.cardBg.withOpacity(0.8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: isDark
+                              ? LifewispColors.darkCardShadow
+                              : LifewispColors.cardShadow,
                           blurRadius: 8,
                           offset: Offset(0, 4),
                         ),
@@ -564,22 +694,42 @@ class _DashboardScreenState extends State<DashboardScreen>
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF333333),
+                      color: isDark
+                          ? LifewispColors.darkMainText
+                          : LifewispColors.mainText,
                     ),
                   ),
                   SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF666666),
+                      fontSize: 14,
+                      color: isDark
+                          ? LifewispColors.darkSubText
+                          : LifewispColors.subText,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showPremiumDialog(BuildContext context, String featureName) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: PremiumGate(
+          child: Container(), // 사용되지 않음
+          featureName: featureName,
+        ),
       ),
     );
   }

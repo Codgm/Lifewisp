@@ -1,19 +1,30 @@
-import 'package:flutter/material.dart';
+import '../widgets/rabbit_emoticon.dart';
 
-const Map<String, String> emotionEmoji = {
+const Map<String, RabbitEmotion> emotionEmoji = {
+  'happy': RabbitEmotion.happy,
+  'sad': RabbitEmotion.sad,
+  'angry': RabbitEmotion.angry,
+  'anxious': RabbitEmotion.anxious,
+  'tired': RabbitEmotion.tired,
+  'love': RabbitEmotion.love,
+  'calm': RabbitEmotion.calm,
+  'excited': RabbitEmotion.excited,
+  'despair': RabbitEmotion.despair,
+  'confidence': RabbitEmotion.confidence,
+};
+
+// 이모지 문자열로의 매핑 (기존 코드 호환성)
+const Map<String, String> emotionEmojiString = {
   'happy': '😊',
   'sad': '😢',
   'angry': '😡',
+  'anxious': '😰',
+  'tired': '😴',
   'love': '😍',
-  'fear': '😱',
-};
-
-const Map<String, Color> emotionColor = {
-  'happy': Colors.amber,
-  'sad': Colors.blue,
-  'angry': Colors.red,
-  'love': Colors.pink,
-  'fear': Colors.purple,
+  'calm': '😌',
+  'excited': '🤩',
+  'despair': '😞',
+  'confidence': '😤',
 };
 
 final Map<String, String> emotionImage = {

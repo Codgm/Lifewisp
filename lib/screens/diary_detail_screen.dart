@@ -1,120 +1,1000 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/emotion_record.dart';
-import '../utils/emotion_utils.dart';
 import '../providers/emotion_provider.dart';
+import '../utils/theme.dart';
+import '../widgets/common_app_bar.dart';
+import '../widgets/rabbit_emoticon.dart';
 import 'emotion_record_screen.dart';
 
-class DiaryDetailScreen extends StatelessWidget {
+
+class DiaryDetailScreen extends StatefulWidget {
   final EmotionRecord record;
   const DiaryDetailScreen({Key? key, required this.record}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('감정 일기 상세'),
-        backgroundColor: emotionColor[record.emotion] ?? Colors.grey,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              final updated = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EmotionRecordScreen(
-                    initialDate: record.date,
-                    initialEmotion: record.emotion,
-                    initialDiary: record.diary,
-                    isEdit: true,
-                  ),
-                ),
-              );
-              if (updated != null && updated is EmotionRecord) {
-                context.read<EmotionProvider>().editRecord(record, updated);
-              }
-            },
+  State<DiaryDetailScreen> createState() => _DiaryDetailScreenState();
+}
+
+class _DiaryDetailScreenState extends State<DiaryDetailScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late AnimationController _scaleController;
+  late AnimationController _slideController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOutQuart,
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.7,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.elasticOut,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutQuart,
+    ));
+
+    _fadeController.forward();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      _scaleController.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 400), () {
+      _slideController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _scaleController.dispose();
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  // Web-compatible image widget
+  Widget _buildWebImage(String imagePath, bool isDark) {
+    // For web, we'll show a placeholder since we can't access local files
+    return Container(
+      color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported_rounded,
+            size: 40,
+            color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
           ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('삭제 확인'),
-                  content: const Text('이 감정 기록을 삭제할까요?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: const Text('취소'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        context.read<EmotionProvider>().deleteRecord(record);
-                        Navigator.of(ctx).pop();
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('삭제', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-            },
+          const SizedBox(height: 8),
+          Text(
+            '웹에서는 이미지를 표시할 수 없습니다',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 600;
-          return Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFE8F4FD),
-                  Color(0xFFF0F8FF),
-                  Color(0xFFFFF0F5),
+    );
+  }
+
+  // 감정에 따른 RabbitEmotion 매핑 함수
+  RabbitEmotion _getEmotionType(String emotion) {
+    switch (emotion.toLowerCase()) {
+      case 'happy':
+        return RabbitEmotion.happy;
+      case 'sad':
+        return RabbitEmotion.sad;
+      case 'angry':
+        return RabbitEmotion.angry;
+      case 'excited':
+        return RabbitEmotion.excited;
+      case 'calm':
+        return RabbitEmotion.calm;
+      case 'anxious':
+        return RabbitEmotion.anxious;
+      case 'love':
+        return RabbitEmotion.love;
+      case 'tired':
+        return RabbitEmotion.tired;
+      case 'despair':
+        return RabbitEmotion.despair;
+      case 'confidence':
+        return RabbitEmotion.confidence;
+      default:
+        return RabbitEmotion.happy;
+    }
+  }
+
+  // 감정에 따른 색상 반환 함수 (theme.dart 색상 사용)
+  Color _getEmotionColor(String emotion, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    switch (emotion.toLowerCase()) {
+      case 'happy':
+        return isDark ? LifewispColors.darkYellow : const Color(0xFFFFB800);
+      case 'sad':
+        return isDark ? LifewispColors.darkBlue : const Color(0xFF4A90E2);
+      case 'angry':
+        return isDark ? LifewispColors.darkRed : const Color(0xFFE74C3C);
+      case 'excited':
+        return isDark ? LifewispColors.darkOrange : const Color(0xFFFF6B35);
+      case 'calm':
+        return isDark ? LifewispColors.darkGreen : const Color(0xFF27AE60);
+      case 'anxious':
+        return isDark ? LifewispColors.darkPurple : const Color(0xFF9B59B6);
+      case 'love':
+        return isDark ? LifewispColors.darkPink : LifewispColors.pink;
+      case 'tired':
+        return isDark ? LifewispColors.darkLightGray : const Color(0xFF7F8C8D);
+      case 'despair':
+        return isDark ? LifewispColors.darkBlack : const Color(0xFF2C3E50);
+      case 'confidence':
+        return isDark ? LifewispColors.darkMint : const Color(0xFF1ABC9C);
+      default:
+        return isDark ? LifewispColors.darkLightGray : const Color(0xFF7F8C8D);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LifewispGradients.onboardingBgFor('emotion', dark: isDark),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // CommonAppBar 사용
+              CommonAppBar(
+                title: '오늘의 감정 일기',
+                emoji: '📔',
+                showBackButton: true,
+                actions: [
+                  _buildActionButton(
+                    context,
+                    icon: Icons.share_rounded,
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF4FACFE),
+                        const Color(0xFF00F2FE),
+                      ],
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/share');
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    context,
+                    icon: Icons.edit_rounded,
+                    backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+                    iconColor: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                    onPressed: () async {
+                      final updated = await Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, _) =>
+                              EmotionRecordScreen(
+                                initialDate: widget.record.date,
+                                initialEmotion: widget.record.emotion,
+                                initialDiary: widget.record.diary,
+                                isEdit: true,
+                              ),
+                          transitionsBuilder: (context, animation, _, child) {
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(1.0, 0.0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeInOutCubic,
+                              )),
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
+                      if (updated != null && updated is EmotionRecord) {
+                        context.read<EmotionProvider>().editRecord(widget.record, updated);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    context,
+                    icon: Icons.delete_outline_rounded,
+                    gradient: LinearGradient(
+                      colors: [
+                        LifewispColors.pink,
+                        LifewispColors.pinkAccent,
+                      ],
+                    ),
+                    onPressed: () => _showDeleteDialog(context),
+                  ),
+                  const SizedBox(width: 16),
                 ],
               ),
-            ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: isWide ? 80 : 12,
-                    right: isWide ? 80 : 12,
-                    top: 8,
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        emotionEmoji[record.emotion] ?? '',
-                        style: const TextStyle(fontSize: 48),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '${record.date.year}년 ${record.date.month}월 ${record.date.day}일',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        record.diary,
-                        style: const TextStyle(fontSize: 20, fontFamily: 'NanumPenScript'),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+
+              // 메인 콘텐츠
+              Expanded(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // 감정 카드 (RabbitEmoticon 사용)
+                        ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(40),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  isDark ? LifewispColors.darkCardBg : Colors.white,
+                                  isDark ? LifewispColors.darkCardBg.withOpacity(0.95) : Colors.white.withOpacity(0.95),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.1),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 12),
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                // RabbitEmoticon 사용
+                                RabbitEmoticon(
+                                  emotion: _getEmotionType(widget.record.emotion),
+                                  size: 140,
+                                  backgroundColor: _getEmotionColor(widget.record.emotion, context).withOpacity(0.1),
+                                  borderColor: _getEmotionColor(widget.record.emotion, context).withOpacity(0.3),
+                                  borderWidth: 3,
+                                ),
+
+                                const SizedBox(height: 28),
+
+                                // 감정 라벨
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        _getEmotionColor(widget.record.emotion, context).withOpacity(0.2),
+                                        _getEmotionColor(widget.record.emotion, context).withOpacity(0.1),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: _getEmotionColor(widget.record.emotion, context).withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    widget.record.emotion.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: _getEmotionColor(widget.record.emotion, context),
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                // 날짜
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? LifewispColors.darkCardBg.withOpacity(0.5) : const Color(0xFFF8F9FA),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isDark ? LifewispColors.darkCardBorder : const Color(0xFFE9ECEF),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.2 : 0.05),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    '${widget.record.date.year}년 ${widget.record.date.month}월 ${widget.record.date.day}일',
+                                    style: LifewispTextStylesExt.subtitleFor(context).copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // 카테고리 표시 (추가된 부분)
+                        if (widget.record.categories != null && widget.record.categories!.isNotEmpty) ...[
+                          SlideTransition(
+                            position: _slideAnimation,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(28),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    isDark ? LifewispColors.darkCardBg : Colors.white,
+                                    isDark ? LifewispColors.darkCardBg.withOpacity(0.98) : Colors.white.withOpacity(0.98),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.08),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              LifewispColors.purple.withOpacity(0.2),
+                                              LifewispColors.purple.withOpacity(0.1),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: LifewispColors.purple.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.local_offer_rounded,
+                                          color: LifewispColors.purple,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Text(
+                                        '하루의 특별한 순간들',
+                                        style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 12,
+                                    children: widget.record.categories!.map((category) {
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              _getEmotionColor(widget.record.emotion, context).withOpacity(0.15),
+                                              _getEmotionColor(widget.record.emotion, context).withOpacity(0.08),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: _getEmotionColor(widget.record.emotion, context).withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          category,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: _getEmotionColor(widget.record.emotion, context),
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+
+                        // 사진 표시 (추가된 부분)
+                        if (widget.record.imagePaths != null && widget.record.imagePaths!.isNotEmpty) ...[
+                          SlideTransition(
+                            position: _slideAnimation,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(28),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    isDark ? LifewispColors.darkCardBg : Colors.white,
+                                    isDark ? LifewispColors.darkCardBg.withOpacity(0.98) : Colors.white.withOpacity(0.98),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.08),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              const Color(0xFF4FACFE).withOpacity(0.2),
+                                              const Color(0xFF00F2FE).withOpacity(0.1),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: const Color(0xFF4FACFE).withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.photo_library_rounded,
+                                          color: const Color(0xFF4FACFE),
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Text(
+                                        '소중한 순간들',
+                                        style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  SizedBox(
+                                    height: 200,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: widget.record.imagePaths!.length,
+                                      itemBuilder: (context, index) {
+                                        final imagePath = widget.record.imagePaths![index];
+                                        return Container(
+                                          width: 160,
+                                          margin: EdgeInsets.only(
+                                            right: index < widget.record.imagePaths!.length - 1 ? 16 : 0,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.1),
+                                                blurRadius: 12,
+                                                offset: const Offset(0, 6),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(20),
+                                            child: kIsWeb
+                                                ? _buildWebImage(imagePath, isDark)
+                                                : (File(imagePath).existsSync()
+                                                    ? Image.file(
+                                                        File(imagePath),
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (context, error, stackTrace) {
+                                                          return Container(
+                                                            color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
+                                                            child: Column(
+                                                              mainAxisAlignment: MainAxisAlignment.center,
+                                                              children: [
+                                                                Icon(
+                                                                  Icons.broken_image_rounded,
+                                                                  size: 40,
+                                                                  color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+                                                                ),
+                                                                const SizedBox(height: 8),
+                                                                Text(
+                                                                  '이미지를 불러올 수 없습니다',
+                                                                  style: TextStyle(
+                                                                    fontSize: 12,
+                                                                    color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+                                                                  ),
+                                                                  textAlign: TextAlign.center,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                    )
+                                                    : Container(
+                                                        color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
+                                                        child: Column(
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            Icon(
+                                                              Icons.image_not_supported_rounded,
+                                                              size: 40,
+                                                              color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+                                                            ),
+                                                            const SizedBox(height: 8),
+                                                            Text(
+                                                              '이미지 파일이 없습니다',
+                                                              style: TextStyle(
+                                                                fontSize: 12,
+                                                                color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+                                                              ),
+                                                              textAlign: TextAlign.center,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                    )),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+
+                        // 일기 내용 카드
+                        if (widget.record.diary.trim().isNotEmpty) ...[
+                          SlideTransition(
+                            position: _slideAnimation,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    isDark ? LifewispColors.darkCardBg : Colors.white,
+                                    isDark ? LifewispColors.darkCardBg.withOpacity(0.98) : Colors.white.withOpacity(0.98),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.08),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              LifewispColors.pink.withOpacity(0.2),
+                                              LifewispColors.pink.withOpacity(0.1),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: LifewispColors.pink.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.auto_stories_rounded,
+                                          color: LifewispColors.pink,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Text(
+                                        '오늘의 기록',
+                                        style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          isDark ? LifewispColors.darkCardBg.withOpacity(0.5) : const Color(0xFFF8F9FA),
+                                          isDark ? LifewispColors.darkCardBg.withOpacity(0.3) : const Color(0xFFF1F3F4),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isDark ? LifewispColors.darkCardBorder : const Color(0xFFE9ECEF),
+                                        width: 1,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.1 : 0.03),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      widget.record.diary,
+                                      style: LifewispTextStylesExt.bodyFor(context).copyWith(
+                                        fontSize: 18,
+                                        height: 1.8,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+
+                        // 감정 통계 미리보기 (개선된 디자인)
+                        SlideTransition(
+                          position: _slideAnimation,
+                          child: GestureDetector(
+                            onTap: () {
+                              // 감정 통계 페이지로 이동
+                              Navigator.pushNamed(context, '/statistics');
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    LifewispColors.pink.withOpacity(0.15),
+                                    LifewispColors.purple.withOpacity(0.15),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: LifewispColors.pink.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: LifewispColors.pink.withOpacity(0.2),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          isDark ? LifewispColors.darkCardBg : Colors.white,
+                                          isDark ? LifewispColors.darkCardBg.withOpacity(0.95) : Colors.white.withOpacity(0.95),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.1),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.analytics_rounded,
+                                      color: LifewispColors.pink,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '감정 통계 보러가기',
+                                          style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '나의 감정 패턴을 확인해보세요',
+                                          style: LifewispTextStylesExt.subFor(context).copyWith(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: (isDark ? LifewispColors.darkCardBg : Colors.white).withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      color: LifewispColors.pink,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
     );
   }
-} 
+
+  Widget _buildActionButton(
+      BuildContext context, {
+        required IconData icon,
+        Gradient? gradient,
+        Color? backgroundColor,
+        Color? iconColor,
+        required VoidCallback onPressed,
+      }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: (gradient != null
+                ? gradient.colors.first
+                : (backgroundColor ?? Colors.grey)).withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(
+          icon,
+          color: iconColor ?? Colors.white,
+          size: 20,
+        ),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+        contentPadding: const EdgeInsets.all(32),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    LifewispColors.pink.withOpacity(0.2),
+                    LifewispColors.pinkAccent.withOpacity(0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(40),
+                border: Border.all(
+                  color: LifewispColors.pink.withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                Icons.delete_outline_rounded,
+                color: LifewispColors.pink,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              '기록 삭제',
+              style: LifewispTextStylesExt.titleFor(context).copyWith(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '이 감정 기록을 삭제할까요?\n삭제된 기록은 복구할 수 없어요.',
+              textAlign: TextAlign.center,
+              style: LifewispTextStylesExt.subFor(context).copyWith(
+                fontSize: 16,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      '취소',
+                      style: LifewispTextStylesExt.subFor(context).copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<EmotionProvider>().deleteRecord(widget.record);
+                      Navigator.of(ctx).pop();
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: LifewispColors.pink,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                      shadowColor: LifewispColors.pink.withOpacity(0.3),
+                    ),
+                    child: Text(
+                      '삭제',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

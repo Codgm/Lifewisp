@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../dashboard_screen.dart';
+import 'package:provider/provider.dart';
+import '../../main.dart';
+import 'package:lifewisp/providers/user_provider.dart';
+import '../../utils/theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -63,25 +66,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     final isWide = size.width > 600;
     final isTablet = size.width > 768;
     final isDesktop = size.width > 1024;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFE5F1), // 연한 핑크
-              Color(0xFFF0F8FF), // 연한 하늘색
-              Color(0xFFE8F5E8), // 연한 민트
-              Color(0xFFFFF8E1), // 연한 노랑
-            ],
-            stops: [0.0, 0.3, 0.7, 1.0],
-          ),
-        ),
+        decoration: LifewispGradients.onboardingBgFor('emotion', dark: isDark).asBoxDecoration,
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -92,8 +84,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                   child: IntrinsicHeight(
                     child: isDesktop
-                        ? _buildDesktopLayout(size)
-                        : _buildMobileLayout(size, isWide),
+                        ? _buildDesktopLayout(size, isDark)
+                        : _buildMobileLayout(size, isWide, isDark),
                   ),
                 ),
               );
@@ -104,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildDesktopLayout(Size size) {
+  Widget _buildDesktopLayout(Size size, bool isDark) {
     return Row(
       children: [
         // 왼쪽 헤더 영역
@@ -112,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           flex: 1,
           child: Container(
             padding: const EdgeInsets.all(60),
-            child: _buildHeaderSection(size, isDesktop: true),
+            child: _buildHeaderSection(size, isDesktop: true, isDark: isDark),
           ),
         ),
         // 오른쪽 폼 영역
@@ -122,28 +114,35 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             margin: const EdgeInsets.all(40),
             padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: isDark
+                  ? LifewispColors.darkCardBg.withOpacity(0.95)
+                  : Colors.white.withOpacity(0.95),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: isDark
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.1),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
               ],
+              border: isDark
+                  ? Border.all(color: LifewispColors.darkCardBorder.withOpacity(0.3))
+                  : null,
             ),
-            child: _buildFormSection(size, isDesktop: true),
+            child: _buildFormSection(size, isDesktop: true, isDark: isDark),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMobileLayout(Size size, bool isWide) {
+  Widget _buildMobileLayout(Size size, bool isWide, bool isDark) {
     return Column(
       children: [
         // 상단 헤더 영역
-        _buildHeaderSection(size, isWide: isWide),
+        _buildHeaderSection(size, isWide: isWide, isDark: isDark),
         // 폼 영역
         Expanded(
           child: Container(
@@ -153,30 +152,47 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             ),
             padding: EdgeInsets.all(isWide ? 32 : 24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: isDark
+                  ? LifewispColors.darkCardBg.withOpacity(0.95)
+                  : Colors.white.withOpacity(0.95),
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: isDark
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.black.withOpacity(0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
+              border: isDark
+                  ? Border.all(color: LifewispColors.darkCardBorder.withOpacity(0.3))
+                  : null,
             ),
-            child: _buildFormSection(size, isWide: isWide),
+            child: _buildFormSection(size, isWide: isWide, isDark: isDark),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildHeaderSection(Size size, {bool isDesktop = false, bool isWide = false}) {
+  Widget _buildHeaderSection(Size size, {bool isDesktop = false, bool isWide = false, required bool isDark}) {
     final headerHeight = isDesktop ? null : (isWide ? 320.0 : 280.0);
 
     return Container(
       height: headerHeight,
       decoration: isDesktop ? null : BoxDecoration(
-        gradient: LinearGradient(
+        gradient: isDark
+            ? LinearGradient(
+          colors: [
+            LifewispColors.darkPink, // 다크 핑크
+            LifewispColors.darkPurple, // 다크 퍼플
+            LifewispColors.darkBlue, // 다크 블루
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        )
+            : LinearGradient(
           colors: [
             Color(0xFFFF6B9D), // 핑크
             Color(0xFF9B59B6), // 퍼플
@@ -236,7 +252,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [
+                                colors: isDark
+                                    ? [
+                                  LifewispColors.darkPinkLight,
+                                  LifewispColors.darkPurple,
+                                  LifewispColors.darkMint,
+                                ]
+                                    : [
                                   Color(0xFFFFB6C1),
                                   Color(0xFFDDA0DD),
                                   Color(0xFF98FB98),
@@ -246,8 +268,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               boxShadow: [
                                 BoxShadow(
                                   color: isDesktop
-                                      ? Color(0xFFFFB6C1).withOpacity(0.3)
-                                      : Colors.black.withOpacity(0.15),
+                                      ? (isDark ? LifewispColors.darkPink : Color(0xFFFFB6C1)).withOpacity(0.3)
+                                      : Colors.black.withOpacity(isDark ? 0.3 : 0.15),
                                   blurRadius: 25,
                                   offset: const Offset(0, 12),
                                 ),
@@ -270,7 +292,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     // 타이틀
                     Stack(
                       children: [
-                        // 테두리용(검정)
+                        // 테두리용
                         Text(
                           'Lifewisp',
                           style: TextStyle(
@@ -279,11 +301,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             foreground: Paint()
                               ..style = PaintingStyle.stroke
                               ..strokeWidth = 2
-                              ..color = Colors.black.withOpacity(0.3),
+                              ..color = (isDark ? Colors.black : Colors.black).withOpacity(0.3),
                             letterSpacing: 1.2,
                           ),
                         ),
-                        // 본문(흰색)
+                        // 본문
                         Text(
                           'Lifewisp',
                           style: TextStyle(
@@ -304,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                         fontSize: isDesktop ? 20 : (isWide ? 19 : 18),
                         fontWeight: FontWeight.w600,
                         color: isDesktop
-                            ? Color(0xFF666666)
+                            ? (isDark ? LifewispColors.darkSubText : Color(0xFF666666))
                             : Colors.white.withOpacity(0.95),
                       ),
                     ),
@@ -315,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                         fontSize: isDesktop ? 16 : (isWide ? 15 : 14),
                         fontWeight: FontWeight.w500,
                         color: isDesktop
-                            ? Color(0xFF888888)
+                            ? (isDark ? LifewispColors.darkSubText : Color(0xFF888888))
                             : Colors.white.withOpacity(0.85),
                       ),
                     ),
@@ -329,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildFormSection(Size size, {bool isDesktop = false, bool isWide = false}) {
+  Widget _buildFormSection(Size size, {bool isDesktop = false, bool isWide = false, required bool isDark}) {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Column(
@@ -345,6 +367,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             keyboardType: TextInputType.emailAddress,
             isWide: isWide,
             isDesktop: isDesktop,
+            isDark: isDark,
           ),
           SizedBox(height: isDesktop ? 28 : 24),
 
@@ -356,10 +379,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             obscureText: _obscurePassword,
             isWide: isWide,
             isDesktop: isDesktop,
+            isDark: isDark,
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: const Color(0xFF9CA3AF),
+                color: isDark ? LifewispColors.darkSubText : const Color(0xFF9CA3AF),
               ),
               onPressed: () {
                 setState(() {
@@ -375,19 +399,25 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             Container(
               padding: EdgeInsets.all(isDesktop ? 18 : 16),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: (isDark ? LifewispColors.darkRed : Colors.red).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(
+                    color: (isDark ? LifewispColors.darkRed : Colors.red).withOpacity(0.3)
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 22),
+                  Icon(
+                      Icons.error_outline,
+                      color: isDark ? LifewispColors.darkRed : Colors.red,
+                      size: 22
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       error!,
                       style: TextStyle(
-                        color: Colors.red,
+                        color: isDark ? LifewispColors.darkRed : Colors.red,
                         fontSize: isDesktop ? 15 : 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -410,7 +440,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 '비밀번호를 잊으셨나요?',
                 style: TextStyle(
                   fontSize: isDesktop ? 15 : 14,
-                  color: const Color(0xFFFF6B9D),
+                  color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -424,17 +454,16 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             height: isDesktop ? 64 : 58,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFF6B9D),
-                  Color(0xFF9B59B6),
-                ],
+                colors: isDark
+                    ? [LifewispColors.darkPink, LifewispColors.darkPurple]
+                    : [Color(0xFFFF6B9D), Color(0xFF9B59B6)],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(isDesktop ? 32 : 29),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF6B9D).withOpacity(0.4),
+                  color: (isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D)).withOpacity(0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -482,15 +511,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           Container(
             height: isDesktop ? 60 : 56,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? LifewispColors.darkCardBg : Colors.white,
               borderRadius: BorderRadius.circular(isDesktop ? 30 : 28),
               border: Border.all(
-                color: const Color(0xFFFF6B9D).withOpacity(0.3),
+                color: (isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D)).withOpacity(0.3),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
                   blurRadius: 15,
                   offset: const Offset(0, 3),
                 ),
@@ -515,7 +544,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     style: TextStyle(
                       fontSize: isDesktop ? 18 : 16,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFFF6B9D),
+                      color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
                     ),
                   ),
                 ],
@@ -530,8 +559,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           Container(
             padding: EdgeInsets.all(isDesktop ? 24 : 20),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE5F1).withOpacity(0.6),
+              color: isDark
+                  ? LifewispColors.darkPinkLight.withOpacity(0.2)
+                  : const Color(0xFFFFE5F1).withOpacity(0.6),
               borderRadius: BorderRadius.circular(20),
+              border: isDark
+                  ? Border.all(color: LifewispColors.darkPink.withOpacity(0.3))
+                  : null,
             ),
             child: Column(
               children: [
@@ -544,7 +578,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       '감정을 안전하게 기록해요',
                       style: TextStyle(
                         fontSize: isDesktop ? 16 : 14,
-                        color: const Color(0xFFFF6B9D),
+                        color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -555,7 +589,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   '모든 데이터는 암호화되어 안전하게 보관됩니다',
                   style: TextStyle(
                     fontSize: isDesktop ? 14 : 12,
-                    color: const Color(0xFF9CA3AF),
+                    color: isDark ? LifewispColors.darkSubText : const Color(0xFF9CA3AF),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -576,18 +610,22 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     Widget? suffixIcon,
     bool isWide = false,
     bool isDesktop = false,
+    required bool isDark,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? LifewispColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.06),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
+        border: isDark
+            ? Border.all(color: LifewispColors.darkCardBorder.withOpacity(0.3))
+            : null,
       ),
       child: TextField(
         controller: controller,
@@ -595,25 +633,27 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         keyboardType: keyboardType,
         style: TextStyle(
           fontSize: isDesktop ? 17 : 16,
-          color: const Color(0xFF1F2937),
+          color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
             fontSize: isDesktop ? 15 : 14,
-            color: const Color(0xFF9CA3AF),
+            color: isDark ? LifewispColors.darkSubText : const Color(0xFF9CA3AF),
           ),
           prefixIcon: Container(
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE5F1),
+              color: isDark
+                  ? LifewispColors.darkPinkLight.withOpacity(0.3)
+                  : const Color(0xFFFFE5F1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFFFF6B9D),
+              color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
               size: 20,
             ),
           ),
@@ -624,13 +664,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(18),
-            borderSide: const BorderSide(
-              color: Color(0xFFFF6B9D),
+            borderSide: BorderSide(
+              color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
               width: 2,
             ),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: isDark ? LifewispColors.darkCardBg : Colors.white,
           contentPadding: EdgeInsets.symmetric(
             horizontal: 16,
             vertical: isDesktop ? 20 : 18,
@@ -647,25 +687,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     await Future.delayed(const Duration(milliseconds: 800));
 
     try {
-      // 실제 로그인 로직
+      // 실제 로그인 로직 대신 UserProvider의 더미 로그인 사용
+      await Provider.of<UserProvider>(context, listen: false).login(emailController.text, passwordController.text);
+      // 로그인 성공 시 MainNavigation으로 이동 (모든 라우트 대체)
       Navigator.pushReplacement(
         context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => DashboardScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 600),
-        ),
+        MaterialPageRoute(builder: (_) => MainNavigation()),
       );
     } catch (e) {
       setState(() {

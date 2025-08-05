@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import '../widgets/rabbit_emoticon.dart';
+import '../utils/theme.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -89,19 +90,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFE5F1), // 연한 핑크
-              Color(0xFFF0F8FF), // 연한 하늘색
-              Color(0xFFE8F5E8), // 연한 민트
-              Color(0xFFFFF8E1), // 연한 노랑
-            ],
-            stops: [0.0, 0.3, 0.7, 1.0],
-          ),
-        ),
+        decoration: LifewispGradients.onboardingBgFor('emotion', dark: Theme.of(context).brightness == Brightness.dark).asBoxDecoration,
         child: Stack(
           children: [
             // 배경 파티클 효과

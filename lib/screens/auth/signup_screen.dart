@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../dashboard_screen.dart';
+import '../../utils/theme.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -48,22 +49,32 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: isDark
+              ? LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFFFE5F1), // 연한 핑크
-              Color(0xFFF0F8FF), // 연한 하늘색
-              Color(0xFFE8F5E8), // 연한 민트
-              Color(0xFFFFF8E1), // 연한 노랑
+              LifewispColors.darkPink,
+              LifewispColors.darkPurple,
+              LifewispColors.darkBlue,
             ],
-            stops: [0.0, 0.3, 0.7, 1.0],
+          )
+              : LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFF6B9D),
+              Color(0xFF9B59B6),
+              Color(0xFF3498DB),
+            ],
           ),
         ),
         child: SafeArea(
@@ -96,7 +107,17 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                 horizontal: 20,
                               ),
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
+                                gradient: isDark
+                                    ? LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    LifewispColors.darkPink,
+                                    LifewispColors.darkPurple,
+                                    LifewispColors.darkBlue,
+                                  ],
+                                )
+                                    : LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
@@ -108,11 +129,14 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                 borderRadius: BorderRadius.circular(25),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Color(0xFFFF6B9D).withOpacity(0.3),
+                                    color: (isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D)).withOpacity(0.3),
                                     blurRadius: 20,
                                     offset: Offset(0, 10),
                                   ),
                                 ],
+                                border: isDark
+                                    ? Border.all(color: LifewispColors.darkCardBorder.withOpacity(0.3))
+                                    : null,
                               ),
                               child: Stack(
                                 children: [
@@ -147,15 +171,20 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                               width: isWide ? 100 : 80,
                                               height: isWide ? 100 : 80,
                                               decoration: BoxDecoration(
-                                                color: Colors.white,
+                                                color: isDark
+                                                    ? LifewispColors.darkCardBg.withOpacity(0.9)
+                                                    : Colors.white,
                                                 borderRadius: BorderRadius.circular(isWide ? 50 : 40),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.black.withOpacity(0.15),
+                                                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.15),
                                                     blurRadius: 25,
                                                     offset: const Offset(0, 12),
                                                   ),
                                                 ],
+                                                border: isDark
+                                                    ? Border.all(color: LifewispColors.darkCardBorder.withOpacity(0.5))
+                                                    : null,
                                               ),
                                               child: Center(
                                                 child: Text('🌸', style: TextStyle(fontSize: isWide ? 50 : 40)),
@@ -203,15 +232,20 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                 child: Container(
                                   padding: EdgeInsets.all(isWide ? 32 : 24),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.95),
+                                    color: isDark
+                                        ? LifewispColors.darkCardBg.withOpacity(0.95)
+                                        : Colors.white.withOpacity(0.95),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                                         blurRadius: 20,
                                         offset: Offset(0, 10),
                                       ),
                                     ],
+                                    border: isDark
+                                        ? Border.all(color: LifewispColors.darkCardBorder.withOpacity(0.3))
+                                        : null,
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -223,6 +257,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                         icon: Icons.email_outlined,
                                         keyboardType: TextInputType.emailAddress,
                                         isWide: isWide,
+                                        isDark: isDark,
                                       ),
                                       SizedBox(height: isWide ? 24 : 20),
 
@@ -233,6 +268,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                         icon: Icons.lock_outline,
                                         obscureText: true,
                                         isWide: isWide,
+                                        isDark: isDark,
                                       ),
                                       SizedBox(height: isWide ? 24 : 20),
 
@@ -243,6 +279,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                         icon: Icons.lock_outline,
                                         obscureText: true,
                                         isWide: isWide,
+                                        isDark: isDark,
                                       ),
 
                                       if (error != null) ...[
@@ -250,19 +287,25 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                         Container(
                                           padding: EdgeInsets.all(isWide ? 16 : 12),
                                           decoration: BoxDecoration(
-                                            color: Colors.red.withOpacity(0.1),
+                                            color: (isDark ? LifewispColors.darkRed : Colors.red).withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                            border: Border.all(
+                                                color: (isDark ? LifewispColors.darkRed : Colors.red).withOpacity(0.3)
+                                            ),
                                           ),
                                           child: Row(
                                             children: [
-                                              Icon(Icons.error_outline, color: Colors.red, size: isWide ? 24 : 20),
+                                              Icon(
+                                                  Icons.error_outline,
+                                                  color: isDark ? LifewispColors.darkRed : Colors.red,
+                                                  size: isWide ? 24 : 20
+                                              ),
                                               SizedBox(width: isWide ? 12 : 8),
                                               Expanded(
                                                 child: Text(
                                                   error!,
                                                   style: GoogleFonts.jua(
-                                                    color: Colors.red,
+                                                    color: isDark ? LifewispColors.darkRed : Colors.red,
                                                     fontSize: isWide ? 16 : 14,
                                                   ),
                                                 ),
@@ -281,15 +324,14 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                           gradient: LinearGradient(
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
-                                            colors: [
-                                              Color(0xFFFF6B9D),
-                                              Color(0xFF9B59B6),
-                                            ],
+                                            colors: isDark
+                                                ? [LifewispColors.darkPink, LifewispColors.darkPurple]
+                                                : [Color(0xFFFF6B9D), Color(0xFF9B59B6)],
                                           ),
                                           borderRadius: BorderRadius.circular(isWide ? 32 : 28),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Color(0xFFFF6B9D).withOpacity(0.4),
+                                              color: (isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D)).withOpacity(0.4),
                                               blurRadius: 15,
                                               offset: const Offset(0, 8),
                                             ),
@@ -337,15 +379,15 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                       Container(
                                         height: isWide ? 64 : 56,
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
+                                          color: isDark ? LifewispColors.darkCardBg : Colors.white,
                                           borderRadius: BorderRadius.circular(isWide ? 32 : 28),
                                           border: Border.all(
-                                            color: Color(0xFFFF6B9D).withOpacity(0.3),
+                                            color: (isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D)).withOpacity(0.3),
                                             width: 2,
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withOpacity(0.08),
+                                              color: Colors.black.withOpacity(isDark ? 0.2 : 0.08),
                                               blurRadius: 15,
                                               offset: const Offset(0, 5),
                                             ),
@@ -370,7 +412,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                                 style: GoogleFonts.jua(
                                                   fontSize: isWide ? 18 : 16,
                                                   fontWeight: FontWeight.w600,
-                                                  color: Color(0xFFFF6B9D),
+                                                  color: isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D),
                                                 ),
                                               ),
                                             ],
@@ -384,10 +426,12 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                       Container(
                                         padding: EdgeInsets.all(isWide ? 20 : 16),
                                         decoration: BoxDecoration(
-                                          color: Color(0xFFFFE5F1).withOpacity(0.7),
+                                          color: isDark
+                                              ? LifewispColors.darkPinkLight.withOpacity(0.2)
+                                              : Color(0xFFFFE5F1).withOpacity(0.7),
                                           borderRadius: BorderRadius.circular(16),
                                           border: Border.all(
-                                            color: Color(0xFFFF6B9D).withOpacity(0.2),
+                                            color: (isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D)).withOpacity(0.2),
                                             width: 1,
                                           ),
                                         ),
@@ -400,7 +444,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                               '안전하고 개인적인 감정 기록',
                                               style: GoogleFonts.jua(
                                                 fontSize: isWide ? 16 : 14,
-                                                color: Color(0xFF9B59B6),
+                                                color: isDark ? LifewispColors.darkPurple : Color(0xFF9B59B6),
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -433,18 +477,22 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
     bool obscureText = false,
     TextInputType? keyboardType,
     required bool isWide,
+    required bool isDark,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? LifewispColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
+        border: isDark
+            ? Border.all(color: LifewispColors.darkCardBorder.withOpacity(0.3))
+            : null,
       ),
       child: TextField(
         controller: controller,
@@ -452,19 +500,26 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
         keyboardType: keyboardType,
         style: GoogleFonts.jua(
           fontSize: isWide ? 18 : 16,
-          color: const Color(0xFF333333),
+          color: isDark ? LifewispColors.darkMainText : LifewispColors.textPrimary,
         ),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: GoogleFonts.jua(
             fontSize: isWide ? 16 : 14,
-            color: const Color(0xFF666666),
+            color: isDark ? LifewispColors.darkSubText : LifewispColors.textSecondary,
           ),
           prefixIcon: Container(
             margin: EdgeInsets.all(isWide ? 16 : 12),
             padding: EdgeInsets.all(isWide ? 10 : 8),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: isDark
+                  ? LinearGradient(
+                colors: [
+                  LifewispColors.darkPinkLight.withOpacity(0.3),
+                  LifewispColors.darkBlue.withOpacity(0.3),
+                ],
+              )
+                  : LinearGradient(
                 colors: [
                   Color(0xFFFFE5F1),
                   Color(0xFFF0F8FF),
@@ -474,7 +529,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
             ),
             child: Icon(
               icon,
-              color: const Color(0xFFFF6B9D),
+              color: isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D),
               size: isWide ? 24 : 20,
             ),
           ),
@@ -484,13 +539,13 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: Color(0xFFFF6B9D),
+            borderSide: BorderSide(
+              color: isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D),
               width: 2,
             ),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: isDark ? LifewispColors.darkCardBg : Colors.white,
           contentPadding: EdgeInsets.symmetric(
             horizontal: isWide ? 20 : 16,
             vertical: isWide ? 20 : 16,

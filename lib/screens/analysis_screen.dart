@@ -1,251 +1,127 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/emotion_provider.dart';
+import '../providers/user_provider.dart';
 import '../utils/emotion_utils.dart';
 import 'dart:math';
-import 'package:google_fonts/google_fonts.dart';
 import '../widgets/rabbit_emoticon.dart';
+import '../widgets/common_app_bar.dart';
+import '../utils/theme.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class AnalysisScreen extends StatelessWidget {
   const AnalysisScreen({Key? key}) : super(key: key);
 
+  // 감정별 색상 매핑
+  static const Map<String, Color> emotionColors = {
+    '행복': Color(0xFFFFB74D), // 밝은 오렌지
+    '슬픔': Color(0xFF64B5F6), // 밝은 파랑
+    '분노': Color(0xFFE57373), // 밝은 빨강
+    '평온': Color(0xFF81C784), // 밝은 초록
+    '불안': Color(0xFFBA68C8), // 밝은 보라
+    '흥분': Color(0xFFFF8A65), // 밝은 코랄
+    '사랑': Color(0xFFF06292), // 밝은 분홍
+    '피곤': Color(0xFF90A4AE), // 블루 그레이
+    '절망': Color(0xFF8D6E63), // 브라운
+  };
+
   @override
   Widget build(BuildContext context) {
     final records = context.watch<EmotionProvider>().records;
-    final Map<String, int> emotionCounts = {};
-    for (var r in records) {
-      emotionCounts[r.emotion] = (emotionCounts[r.emotion] ?? 0) + 1;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // 실제 데이터가 없으면 더미 데이터 사용
+    Map<String, int> emotionCounts;
+    List effectiveRecords;
+
+    if (records.isEmpty) {
+      // 더미 데이터 생성
+      emotionCounts = _generateDummyEmotionCounts();
+      effectiveRecords = _generateDummyRecords();
+    } else {
+      // 실제 데이터 사용
+      emotionCounts = {};
+      for (var r in records) {
+        emotionCounts[r.emotion] = (emotionCounts[r.emotion] ?? 0) + 1;
+      }
+      effectiveRecords = records;
     }
-    final total = records.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F6FF),
-      body: CustomScrollView(
-        slivers: [
-          // 1. 앱바를 캐릭터 화면 형식으로 변경
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                      onPressed: () => Navigator.pop(context),
-                      color: const Color(0xFF6B73FF),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Spacer(),
-                  Text(
-                    '📊 감정 분석',
-                    style: GoogleFonts.jua(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF6B46C1),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.more_vert, size: 18),
-                      onPressed: () {},
-                      color: const Color(0xFF6B73FF),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 16),
-          ),
-
-          // 메인 컨텐츠
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // 감정 요약 카드 (가장 위에 배치)
-                _buildEmotionSummaryCard(emotionCounts, total),
-                const SizedBox(height: 16),
-
-                // 감정 분포 원형 차트
-                _buildCircularChart(emotionCounts, total),
-                const SizedBox(height: 16),
-
-                // 감정 변화 추이 차트
-                _buildTrendChart(records),
-                const SizedBox(height: 16),
-
-                // 감정별 상세 통계
-                _buildEmotionStats(emotionCounts, total),
-                const SizedBox(height: 16),
-
-                // 주간 감정 그리드
-                _buildWeeklyEmotionGrid(),
-                const SizedBox(height: 16),
-
-                // 격려 메시지
-                _buildEncouragementCard(),
-                const SizedBox(height: 32),
-              ]),
-            ),
-          ),
-        ],
+      backgroundColor: Colors.transparent,
+      appBar: CommonAppBar(
+        title: '감정 분석',
+        emoji: '📊',
+        showBackButton: false,
       ),
-    );
-  }
-
-  // 감정 요약 카드 (상단에 배치)
-  Widget _buildEmotionSummaryCard(Map<String, int> emotionCounts, int total) {
-    final topEmotion = emotionCounts.entries.isEmpty
-        ? null
-        : emotionCounts.entries.reduce((a, b) => a.value > b.value ? a : b);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFFE0E7FF),
-            const Color(0xFFF3E8FF),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LifewispGradients.onboardingBgFor('emotion', dark: isDark),
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Text('🌟', style: TextStyle(fontSize: 24)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '오늘의 감정 요약',
-                      style: GoogleFonts.jua(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6B46C1),
-                      ),
-                    ),
-                    Text(
-                      topEmotion != null
-                          ? '가장 많이 느낀 감정: ${topEmotion.key}'
-                          : '아직 감정이 기록되지 않았어요',
-                      style: GoogleFonts.jua(
-                        fontSize: 14,
-                        color: const Color(0xFF9CA3AF),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (topEmotion != null) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                RabbitEmoticon(
-                  emotion: _mapStringToRabbitEmotion(topEmotion.key),
-                  size: 40,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${topEmotion.value}번 기록됨',
-                        style: GoogleFonts.jua(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF6B46C1),
-                        ),
-                      ),
-                      Text(
-                        '전체의 ${((topEmotion.value / total) * 100).toStringAsFixed(1)}%',
-                        style: GoogleFonts.jua(
-                          fontSize: 14,
-                          color: const Color(0xFF9CA3AF),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          children: [
+            // 감정별 분포
+            _buildEmotionDistribution(emotionCounts, effectiveRecords.length, context),
+            const SizedBox(height: 32),
+            // 월간 감정 변화
+            _buildMonthlyTrend(effectiveRecords, context),
+            const SizedBox(height: 32),
+            // 감정 히트맵(달력)
+            _buildEmotionHeatmap(effectiveRecords, context),
+            const SizedBox(height: 32),
+            // 특이점 분석
+            _buildOutlierAnalysis(emotionCounts, effectiveRecords, context),
           ],
-        ],
+        ),
       ),
     );
   }
 
-  // 감정 분포 원형 차트
-  Widget _buildCircularChart(Map<String, int> emotionCounts, int total) {
+  // 더미 감정 카운트 생성
+  Map<String, int> _generateDummyEmotionCounts() {
+    final random = Random();
+    return {
+      '행복': 15 + random.nextInt(10),
+      '슬픔': 8 + random.nextInt(5),
+      '분노': 3 + random.nextInt(4),
+      '평온': 12 + random.nextInt(8),
+      '불안': 5 + random.nextInt(6),
+      '흥분': 7 + random.nextInt(5),
+      '사랑': 10 + random.nextInt(7),
+    };
+  }
+
+  // 더미 레코드 생성
+  List _generateDummyRecords() {
+    final emotions = ['행복', '슬픔', '분노', '평온', '불안', '흥분', '사랑'];
+    final random = Random();
+    final now = DateTime.now();
+
+    return List.generate(60, (index) {
+      return {
+        'emotion': emotions[random.nextInt(emotions.length)],
+        'date': now.subtract(Duration(days: random.nextInt(30))),
+        'note': '더미 데이터입니다.',
+      };
+    });
+  }
+
+  // 1. 감정별 분포 (파이 차트와 바 차트 결합)
+  Widget _buildEmotionDistribution(Map<String, int> emotionCounts, int total, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sortedEmotions = emotionCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? LifewispColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.06),
+            color: isDark ? Colors.black.withOpacity(0.3) : LifewispColors.purple.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -259,258 +135,81 @@ class AnalysisScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0E7FF),
+                  color: isDark ? LifewispColors.darkPurple : LifewispColors.lightPurple,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text('🎯', style: TextStyle(fontSize: 20)),
+                child: const Text('🥧', style: TextStyle(fontSize: 20)),
               ),
               const SizedBox(width: 12),
               Text(
-                '감정 분포',
-                style: GoogleFonts.jua(
+                '감정별 분포',
+                style: LifewispTextStyles.jua(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6B46C1),
+                  color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
+
+          // 파이 차트
           Center(
             child: SizedBox(
-              width: 280,
-              height: 280,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 중앙 원
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8F6FF),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 4,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.purple.withOpacity(0.1),
-                          blurRadius: 15,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('🌈', style: TextStyle(fontSize: 32)),
-                          const SizedBox(height: 4),
-                          Text(
-                            '총 $total개',
-                            style: GoogleFonts.jua(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF6B46C1),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // 감정 카드들을 원형으로 배치
-                  ...emotionCounts.entries.toList().asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final emotion = entry.value;
-                    final percent = total > 0 ? emotion.value / total : 0.0;
-                    final angle = (index * 2 * pi) / emotionCounts.length;
-                    final radius = 105.0;
-                    final x = radius * cos(angle);
-                    final y = radius * sin(angle);
-
-                    return Positioned(
-                      left: 140 + x - 30,
-                      top: 140 + y - 35,
-                      child: Container(
-                        width: 60,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: emotionColor[emotion.key]?.withOpacity(0.3) ?? Colors.grey.withOpacity(0.3),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: emotionColor[emotion.key]?.withOpacity(0.2) ?? Colors.grey.withOpacity(0.2),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            RabbitEmoticon(
-                              emotion: _mapStringToRabbitEmotion(emotion.key),
-                              size: 32,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${(percent * 100).toStringAsFixed(0)}%',
-                              style: GoogleFonts.jua(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: emotionColor[emotion.key] ?? Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ],
+              width: 200,
+              height: 200,
+              child: CustomPaint(
+                painter: _PieChartPainter(emotionCounts, isDark, context),
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // 감정 변화 추이 차트
-  Widget _buildTrendChart(List records) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE0E7FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('📈', style: TextStyle(fontSize: 20)),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '감정 변화 추이',
-                style: GoogleFonts.jua(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6B46C1),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 20),
-          SizedBox(
-            height: 160,
-            child: CustomPaint(
-              painter: _ModernLineChartPainter(records),
-              child: Container(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  // 감정별 상세 통계
-  Widget _buildEmotionStats(Map<String, int> emotionCounts, int total) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE0E7FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('📊', style: TextStyle(fontSize: 20)),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '감정별 통계',
-                style: GoogleFonts.jua(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6B46C1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // 감정 리스트
-          ...emotionCounts.entries.map((entry) {
-            final percent = total > 0 ? entry.value / total : 0.0;
+          // 감정별 바 차트
+          ...sortedEmotions.map((entry) {
+            final percent = entry.value / total;
+            final emotionColor = emotionColors[entry.key] ?? (isDark ? LifewispColors.darkSubText : LifewispColors.gray);
+            
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F6FF),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: emotionColor[entry.key]?.withOpacity(0.2) ?? Colors.grey.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
               child: Row(
                 children: [
                   RabbitEmoticon(
                     emotion: _mapStringToRabbitEmotion(entry.key),
-                    size: 36,
+                    size: 32,
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          entry.key,
-                          style: GoogleFonts.jua(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF6B46C1),
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              entry.key,
+                              style: LifewispTextStyles.jua(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
+                              ),
+                            ),
+                            Text(
+                              '${entry.value}회 (${(percent * 100).toStringAsFixed(1)}%)',
+                              style: LifewispTextStyles.jua(
+                                fontSize: 12,
+                                color: isDark ? LifewispColors.darkSubText : LifewispColors.gray,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Container(
                           height: 6,
                           decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: isDark
+                                ? LifewispColors.darkSubText.withOpacity(0.2)
+                                : LifewispColors.gray.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(3),
                           ),
                           child: FractionallySizedBox(
@@ -518,7 +217,7 @@ class AnalysisScreen extends StatelessWidget {
                             widthFactor: percent,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: emotionColor[entry.key] ?? Colors.grey,
+                                color: emotionColor,
                                 borderRadius: BorderRadius.circular(3),
                               ),
                             ),
@@ -526,27 +225,6 @@ class AnalysisScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${entry.value}회',
-                        style: GoogleFonts.jua(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF6B46C1),
-                        ),
-                      ),
-                      Text(
-                        '${(percent * 100).toStringAsFixed(1)}%',
-                        style: GoogleFonts.jua(
-                          fontSize: 12,
-                          color: const Color(0xFF9CA3AF),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -557,16 +235,396 @@ class AnalysisScreen extends StatelessWidget {
     );
   }
 
-  // 주간 감정 그리드
-  Widget _buildWeeklyEmotionGrid() {
+  // 2. 월간 감정 변화 트렌드 (개선된 버전)
+  Widget _buildMonthlyTrend(List records, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? LifewispColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.06),
+            color: isDark ? Colors.black.withOpacity(0.15) : Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? LifewispColors.darkPurple : LifewispColors.lightPurple,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('📈', style: TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '월간 감정 변화',
+                style: LifewispTextStyles.jua(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  horizontalInterval: 2,
+                  verticalInterval: 5,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: isDark 
+                        ? Colors.white.withOpacity(0.1) 
+                        : Colors.grey.withOpacity(0.2),
+                      strokeWidth: 1,
+                    );
+                  },
+                  getDrawingVerticalLine: (value) {
+                    return FlLine(
+                      color: isDark 
+                        ? Colors.white.withOpacity(0.1) 
+                        : Colors.grey.withOpacity(0.2),
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 35,
+                      interval: 2,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: GoogleFonts.jua(
+                            fontSize: 10,
+                            color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 25,
+                      interval: 5,
+                      getTitlesWidget: (value, meta) {
+                        final day = value.toInt();
+                        if (day % 5 == 0 && day <= 30) {
+                          return Text(
+                            '${day}일',
+                            style: GoogleFonts.jua(
+                              fontSize: 9,
+                              color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border(
+                    left: BorderSide(
+                      color: isDark ? Colors.white.withOpacity(0.2) : Colors.grey.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    bottom: BorderSide(
+                      color: isDark ? Colors.white.withOpacity(0.2) : Colors.grey.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                minX: 0,
+                maxX: 30,
+                minY: 0,
+                maxY: 10,
+                lineBarsData: [
+                  // 행복
+                  LineChartBarData(
+                    spots: _generateSmoothLineData(30, 3, 8),
+                    isCurved: true,
+                    curveSmoothness: 0.3,
+                    color: emotionColors['행복']!,
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 3,
+                          color: emotionColors['행복']!,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: emotionColors['행복']!.withOpacity(0.1),
+                    ),
+                  ),
+                  // 슬픔
+                  LineChartBarData(
+                    spots: _generateSmoothLineData(30, 1, 5),
+                    isCurved: true,
+                    curveSmoothness: 0.3,
+                    color: emotionColors['슬픔']!,
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 3,
+                          color: emotionColors['슬픔']!,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: emotionColors['슬픔']!.withOpacity(0.1),
+                    ),
+                  ),
+                  // 분노
+                  LineChartBarData(
+                    spots: _generateSmoothLineData(30, 0, 4),
+                    isCurved: true,
+                    curveSmoothness: 0.3,
+                    color: emotionColors['분노']!,
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 3,
+                          color: emotionColors['분노']!,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: emotionColors['분노']!.withOpacity(0.1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // 범례
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem('행복', emotionColors['행복']!),
+              const SizedBox(width: 20),
+              _buildLegendItem('슬픔', emotionColors['슬픔']!),
+              const SizedBox(width: 20),
+              _buildLegendItem('분노', emotionColors['분노']!),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 범례 아이템
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.jua(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 더 부드러운 라인 데이터 생성
+  List<FlSpot> _generateSmoothLineData(int days, int minValue, int maxValue) {
+    final random = Random();
+    final spots = <FlSpot>[];
+    
+    double previousValue = (minValue + maxValue) / 2;
+    
+    for (int i = 0; i <= days; i++) {
+      // 이전 값을 기준으로 변화량을 제한하여 부드러운 곡선 생성
+      double change = (random.nextDouble() - 0.5) * 2; // -1 ~ 1
+      double newValue = (previousValue + change).clamp(minValue.toDouble(), maxValue.toDouble());
+      
+      spots.add(FlSpot(i.toDouble(), newValue));
+      previousValue = newValue;
+    }
+    
+    return spots;
+  }
+
+  Widget _buildLegendDot(Color color) {
+    return Container(
+        width: 12,
+        height: 12,
+        margin: const EdgeInsets.only(right: 4),
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle)
+    );
+  }
+
+  // 3. 감정 히트맵 (달력 형태)
+  Widget _buildEmotionHeatmap(List records, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? LifewispColors.darkCardBg : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.15) : Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? LifewispColors.darkPurple : LifewispColors.lightPurple,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('🗓️', style: TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '감정 히트맵',
+                style: LifewispTextStyles.jua(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildDummyCalendarHeatmap(isDark, context),
+        ],
+      ),
+    );
+  }
+
+  // 더미 달력 히트맵
+  Widget _buildDummyCalendarHeatmap(bool isDark, BuildContext context) {
+    final days = List.generate(30, (i) => i + 1);
+    final emotions = ['행복', '슬픔', '분노', '평온', '불안'];
+    final random = Random();
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: days.map((d) {
+        // 랜덤하게 감정이 있는 날과 없는 날 결정
+        final hasEmotion = random.nextBool();
+        if (!hasEmotion) {
+          return Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? LifewispColors.darkLightGray.withOpacity(0.3)
+                  : LifewispColors.lightGray.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Center(
+              child: Text(
+                '$d',
+                style: GoogleFonts.jua(
+                  fontSize: 10,
+                  color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                ),
+              ),
+            ),
+          );
+        }
+
+        final emotion = emotions[random.nextInt(emotions.length)];
+        final color = emotionColors[emotion] ?? Colors.grey;
+
+        return Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color, width: 1.5),
+          ),
+          child: Center(
+            child: Text(
+              '$d',
+              style: GoogleFonts.jua(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // 4. 특이점 분석
+  Widget _buildOutlierAnalysis(Map<String, int> emotionCounts, List records, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final outliers = _getOutlierAnalysis(emotionCounts, records);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? LifewispColors.darkCardBg : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.3) : LifewispColors.purple.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -580,199 +638,229 @@ class AnalysisScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0E7FF),
+                  color: isDark ? LifewispColors.darkPurple : LifewispColors.lightPurple,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text('📅', style: TextStyle(fontSize: 20)),
+                child: const Text('🔍', style: TextStyle(fontSize: 20)),
               ),
               const SizedBox(width: 12),
               Text(
-                '이번 주 감정',
-                style: GoogleFonts.jua(
+                '특이점 분석',
+                style: LifewispTextStyles.jua(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6B46C1),
+                  color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+          if (outliers.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? LifewispColors.darkLightGray : LifewispColors.lightGray,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Text('✨', style: TextStyle(fontSize: 24)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '현재까지는 특별한 패턴이 발견되지 않았어요.\n더 많은 데이터가 쌓이면 흥미로운 인사이트를 발견할 수 있을 거예요!',
+                      style: LifewispTextStyles.jua(
+                        fontSize: 14,
+                        color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...outliers.map((outlier) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? LifewispColors.darkLightGray : LifewispColors.lightGray,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: outlier['type'] == 'warning'
+                      ? Colors.orange.withOpacity(0.3)
+                      : Colors.blue.withOpacity(0.3),
+                  width: 1,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: emotionEmoji.entries.map((e) {
-                final random = Random(e.key.hashCode);
-                final weekCount = 1 + random.nextInt(4);
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    RabbitEmoticon(
-                      emotion: _mapStringToRabbitEmotion(e.key),
-                      size: 36,
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: 20,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: emotionColor[e.key] ?? Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    outlier['type'] == 'warning' ? '⚠️' : '💡',
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      outlier['message']!,
+                      style: LifewispTextStyles.jua(
+                        fontSize: 14,
+                        color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$weekCount회',
-                      style: GoogleFonts.jua(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6B46C1),
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
+                  ),
+                ],
+              ),
+            )).toList(),
         ],
       ),
     );
   }
 
-  // 격려 메시지 카드
-  Widget _buildEncouragementCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF818CF8),
-            const Color(0xFFC084FC),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Text('💝', style: TextStyle(fontSize: 28)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '멋진 감정 여행이에요!',
-                  style: GoogleFonts.jua(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '감정 기록을 꾸준히 할수록\n더 정확한 분석을 볼 수 있어요 ✨',
-                  style: GoogleFonts.jua(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.9),
-                    height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  List<Map<String, String>> _getOutlierAnalysis(Map<String, int> emotionCounts, List records) {
+    final List<Map<String, String>> outliers = [];
+
+    // 더미 데이터인지 실제 데이터인지에 관계없이 분석
+    final totalRecords = records.length;
+    if (totalRecords > 10) {
+      final topEmotion = emotionCounts.entries.reduce((a, b) => a.value > b.value ? a : b);
+      if (topEmotion.value / totalRecords > 0.3) {
+        outliers.add({
+          'type': 'info',
+          'message': '${topEmotion.key} 감정이 전체의 ${((topEmotion.value / totalRecords) * 100).toStringAsFixed(1)}%를 차지해요. 이 감정이 최근 주된 감정 상태인 것 같아요.'
+        });
+      }
+
+      final negativeEmotions = ['슬픔', '분노', '불안', '절망'];
+      final negativeCount = emotionCounts.entries
+          .where((e) => negativeEmotions.contains(e.key))
+          .fold(0, (sum, e) => sum + e.value);
+
+      if (negativeCount / totalRecords > 0.25) {
+        outliers.add({
+          'type': 'warning',
+          'message': '최근 부정적인 감정의 비율이 조금 높아요. 스트레스 관리나 휴식이 필요할 수 있어요.'
+        });
+      }
+
+      // 긍정적인 패턴도 추가
+      final positiveEmotions = ['행복', '사랑', '평온', '흥분'];
+      final positiveCount = emotionCounts.entries
+          .where((e) => positiveEmotions.contains(e.key))
+          .fold(0, (sum, e) => sum + e.value);
+
+      if (positiveCount / totalRecords > 0.6) {
+        outliers.add({
+          'type': 'info',
+          'message': '긍정적인 감정의 비율이 높아요! 좋은 컨디션을 유지하고 계시는 것 같아요. 👍'
+        });
+      }
+    }
+
+    return outliers;
+  }
+
+  // 데이터 처리 헬퍼 메서드들 (기존 코드 유지)
+  Map<String, Map<String, int>> _getMonthlyEmotionData(List records) {
+    final Map<String, Map<String, int>> monthlyData = {};
+    return {
+      '1월': {'행복': 15, '슬픔': 5, '분노': 3},
+      '2월': {'행복': 12, '슬픔': 8, '분노': 2},
+      '3월': {'행복': 18, '슬픔': 4, '분노': 1},
+    };
+  }
+
+  Map<String, Map<String, int>> _getDailyEmotionData(List records) {
+    final Map<String, Map<String, int>> dailyData = {};
+    for (int i = 1; i <= 31; i++) {
+      if (Random().nextBool()) {
+        dailyData['$i'] = {
+          emotionEmoji.keys.elementAt(Random().nextInt(emotionEmoji.length)): 1 + Random().nextInt(3)
+        };
+      }
+    }
+    return dailyData;
   }
 }
 
-class _ModernLineChartPainter extends CustomPainter {
-  final List records;
-  _ModernLineChartPainter(this.records);
+// 파이 차트 페인터
+class _PieChartPainter extends CustomPainter {
+  final Map<String, int> emotionCounts;
+  final bool isDark;
+  final BuildContext context;
+
+  _PieChartPainter(this.emotionCounts, this.isDark, this.context);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF818CF8)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 10;
+    final total = emotionCounts.values.fold(0, (sum, count) => sum + count).toDouble();
 
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFF818CF8).withOpacity(0.3),
-          const Color(0xFF818CF8).withOpacity(0.05),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    double startAngle = -pi / 2;
 
-    final points = <Offset>[];
-    final fillPoints = <Offset>[];
-    final n = records.length > 1 ? records.length : 7;
+    for (final entry in emotionCounts.entries) {
+      final sweepAngle = (entry.value / total) * 2 * pi;
+      final emotionColor = AnalysisScreen.emotionColors[entry.key] ?? 
+          (isDark ? LifewispColors.darkSubText : LifewispColors.gray);
+      
+      final paint = Paint()
+        ..color = emotionColor
+        ..style = PaintingStyle.fill;
 
-    for (int i = 0; i < n; i++) {
-      final y = size.height - (sin(i * 0.5) * 25 + 50) - 20;
-      final x = i * (size.width / (n - 1));
-      points.add(Offset(x, y));
-      fillPoints.add(Offset(x, y));
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        true,
+        paint,
+      );
+
+      startAngle += sweepAngle;
     }
 
-    if (points.length > 1) {
-      // 영역 채우기
-      fillPoints.add(Offset(size.width, size.height));
-      fillPoints.add(Offset(0, size.height));
-      final fillPath = Path()..addPolygon(fillPoints, true);
-      canvas.drawPath(fillPath, fillPaint);
+    // 중앙 원
+    canvas.drawCircle(
+      center,
+      radius * 0.4,
+      Paint()..color = isDark ? LifewispColors.darkCardBg : Colors.white,
+    );
+  }
 
-      // 곡선 그리기
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// 월간 트렌드 페인터
+class _MonthlyTrendPainter extends CustomPainter {
+  final Map<String, Map<String, int>> monthlyData;
+  final bool isDark;
+  final BuildContext context;
+
+  _MonthlyTrendPainter(this.monthlyData, this.isDark, this.context);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 간단한 라인 차트 구현
+    final paint = Paint()
+      ..color = isDark ? LifewispColors.darkPink : LifewispColors.purple
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    final months = monthlyData.keys.toList();
+    if (months.length > 1) {
       final path = Path();
-      path.moveTo(points[0].dx, points[0].dy);
-      for (int i = 1; i < points.length; i++) {
-        final cp1x = points[i - 1].dx + (points[i].dx - points[i - 1].dx) * 0.5;
-        final cp1y = points[i - 1].dy;
-        final cp2x = points[i].dx - (points[i].dx - points[i - 1].dx) * 0.5;
-        final cp2y = points[i].dy;
-        path.cubicTo(cp1x, cp1y, cp2x, cp2y, points[i].dx, points[i].dy);
+      for (int i = 0; i < months.length; i++) {
+        final x = (i / (months.length - 1)) * size.width;
+        final totalCount = monthlyData[months[i]]?.values.fold(0, (sum, count) => sum + count) ?? 0;
+        final y = size.height - (totalCount / 30 * size.height * 0.8);
+
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
       }
       canvas.drawPath(path, paint);
-
-      // 점 그리기
-      for (final point in points) {
-        canvas.drawCircle(point, 6, Paint()..color = Colors.white);
-        canvas.drawCircle(point, 4, Paint()..color = const Color(0xFF818CF8));
-      }
     }
   }
 

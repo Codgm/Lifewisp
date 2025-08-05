@@ -4,6 +4,8 @@ import '../providers/emotion_provider.dart';
 import '../widgets/rabbit_emoticon.dart';
 import 'package:provider/provider.dart';
 import '../models/emotion_record.dart';
+import '../widgets/common_app_bar.dart';
+import '../utils/theme.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({Key? key}) : super(key: key);
@@ -20,17 +22,19 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
 
-  // 감정 데이터 (실제로는 provider에서 가져올 데이터)
-  final Map<String, dynamic> emotionData = {
-    'happy': {'emoji': '😊', 'color': Color(0xFFFFD93D), 'name': '행복'},
-    'sad': {'emoji': '😢', 'color': Color(0xFF6AB7FF), 'name': '슬픔'},
-    'angry': {'emoji': '😠', 'color': Color(0xFFFF6B6B), 'name': '분노'},
-    'excited': {'emoji': '🤩', 'color': Color(0xFFFF9F43), 'name': '흥분'},
-    'calm': {'emoji': '😌', 'color': Color(0xFF4ECDC4), 'name': '평온'},
-    'anxious': {'emoji': '😰', 'color': Color(0xFFAD7BFF), 'name': '불안'},
-    'love': {'emoji': '🥰', 'color': Color(0xFFFF8FA3), 'name': '사랑'},
-    'tired': {'emoji': '😪', 'color': Color(0xFF95A5A6), 'name': '피곤'},
-  };
+  // 감정 데이터 - 테마 인식 색상으로 업데이트
+  Map<String, dynamic> _getEmotionData(BuildContext context) {
+    return {
+      'happy': {'emoji': '😊', 'color': Color(0xFF4CAF50), 'name': '행복'}, // 초록색
+      'sad': {'emoji': '😢', 'color': Color(0xFF2196F3), 'name': '슬픔'},   // 파란색
+      'angry': {'emoji': '😠', 'color': Color(0xFF628BB3), 'name': '분노'}, // 진한 회색
+      'excited': {'emoji': '🤩', 'color': Color(0xFFFFC107), 'name': '흥분'}, // 노란색
+      'calm': {'emoji': '😌', 'color': Color(0xFF8BC34A), 'name': '평온'},   // 연한 초록
+      'anxious': {'emoji': '😰', 'color': Color(0xFF9C27B0), 'name': '불안'}, // 보라색
+      'love': {'emoji': '🥰', 'color': Color(0xFFE91E63), 'name': '사랑'},   // 핑크색
+      'tired': {'emoji': '😪', 'color': Color(0xFF607D8B), 'name': '피곤'},  // 회색 블루
+    };
+  }
 
   @override
   void initState() {
@@ -81,11 +85,6 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
     if (screenWidth > 900) return baseFontSize * 1.1;
     if (screenWidth > 600) return baseFontSize * 1.05;
     return baseFontSize;
-  }
-
-  int _getGridColumns(double screenWidth) {
-    if (screenWidth > 1200) return 2; // 큰 화면에서는 2열 레이아웃
-    return 1; // 기본적으로 1열
   }
 
   RabbitEmotion _mapStringToRabbitEmotion(String key) {
@@ -139,21 +138,15 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
     final isLargeScreen = screenWidth > 1200;
     final isTablet = screenWidth > 600 && screenWidth <= 1200;
     final isMobile = screenWidth <= 600;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: CommonAppBar(title: '감정 캘린더', centerTitle: true, showBackButton: false),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFE8F4FD),
-              Color(0xFFF0F8FF),
-              Color(0xFFFFF0F5),
-            ],
-          ),
+        decoration: BoxDecoration(
+          gradient: LifewispGradients.onboardingBgFor('emotion', dark: isDark),
         ),
         child: SafeArea(
           child: LayoutBuilder(
@@ -166,124 +159,17 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
                   padding: EdgeInsets.only(
                     left: responsivePadding,
                     right: responsivePadding,
-                    top: 8,
+                    top: 0,
                     bottom: MediaQuery.of(context).viewInsets.bottom + 20,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 커스텀 앱바 - 반응형 크기 조정
-                      _buildResponsiveAppBar(availableWidth),
-
-                      // 메인 컨텐츠 영역
-                      if (isLargeScreen)
-                        _buildTwoColumnLayout(availableWidth)
-                      else
-                        _buildSingleColumnLayout(availableWidth),
-                    ],
-                  ),
+                  child: (isLargeScreen)
+                      ? _buildTwoColumnLayout(availableWidth)
+                      : _buildSingleColumnLayout(availableWidth),
                 ),
               );
             },
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildResponsiveAppBar(double screenWidth) {
-    final iconSize = screenWidth > 600 ? 20.0 : 18.0;
-    final titleFontSize = _getResponsiveFontSize(screenWidth, 16.0);
-    final containerSize = screenWidth > 600 ? 44.0 : 40.0;
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: screenWidth > 600 ? 24 : 20,
-          vertical: screenWidth > 600 ? 20 : 16
-      ),
-      child: Row(
-        children: [
-          // 뒤로가기 버튼
-          Container(
-            width: containerSize,
-            height: containerSize,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(containerSize / 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.arrow_back_ios_rounded, size: iconSize),
-              onPressed: () => Navigator.pop(context),
-              color: const Color(0xFF6B73FF),
-            ),
-          ),
-          const Spacer(),
-          // 제목
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: screenWidth > 600 ? 24 : 20,
-                vertical: screenWidth > 600 ? 12 : 8
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '📅',
-                  style: TextStyle(fontSize: titleFontSize),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '감정 캘린더',
-                  style: GoogleFonts.notoSans(
-                    fontSize: titleFontSize,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2D3748),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          // 통계 버튼
-          Container(
-            width: containerSize,
-            height: containerSize,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(containerSize / 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(Icons.analytics_rounded, size: iconSize),
-              onPressed: () {},
-              color: const Color(0xFF6B73FF),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -297,20 +183,8 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
           flex: 3,
           child: Column(
             children: [
-              _buildEmotionFilters(screenWidth),
+              const SizedBox(height: 20), // 상단 패딩 추가
               _buildCalendarContainer(screenWidth),
-            ],
-          ),
-        ),
-        const SizedBox(width: 24),
-        // 오른쪽 컬럼 - 통계 및 인사이트
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              _buildEmotionStatistics(screenWidth),
-              const SizedBox(height: 20),
-              _buildEmotionInsights(screenWidth),
             ],
           ),
         ),
@@ -321,100 +195,28 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
   Widget _buildSingleColumnLayout(double screenWidth) {
     return Column(
       children: [
-        _buildEmotionFilters(screenWidth),
+        const SizedBox(height: 20), // 상단 패딩 추가
         _buildCalendarContainer(screenWidth),
-        const SizedBox(height: 20),
-        _buildEmotionStatistics(screenWidth),
         const SizedBox(height: 20),
         _buildEmotionInsights(screenWidth),
       ],
     );
   }
 
-  Widget _buildEmotionFilters(double screenWidth) {
-    final chipHeight = screenWidth > 600 ? 56.0 : 50.0;
-    final chipFontSize = _getResponsiveFontSize(screenWidth, 14.0);
-
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        height: chipHeight,
-        margin: const EdgeInsets.only(bottom: 20),
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: [
-            // 전체 보기 칩
-            Container(
-              margin: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(
-                  '전체',
-                  style: GoogleFonts.notoSans(
-                    fontSize: chipFontSize,
-                    fontWeight: FontWeight.w500,
-                    color: filterEmotion == null
-                        ? Colors.white
-                        : const Color(0xFF6B73FF),
-                  ),
-                ),
-                selected: filterEmotion == null,
-                selectedColor: const Color(0xFF6B73FF),
-                backgroundColor: Colors.white.withOpacity(0.9),
-                onSelected: (_) => setState(() => filterEmotion = null),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 0,
-                pressElevation: 0,
-              ),
-            ),
-            // 감정별 필터 칩들
-            ...emotionData.entries.map((entry) {
-              final emotion = entry.key;
-              final data = entry.value;
-              return Container(
-                margin: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(
-                    data['name'],
-                    style: GoogleFonts.notoSans(
-                      fontSize: chipFontSize,
-                      fontWeight: FontWeight.w500,
-                      color: filterEmotion == emotion
-                          ? Colors.white
-                          : data['color'],
-                    ),
-                  ),
-                  selected: filterEmotion == emotion,
-                  selectedColor: data['color'],
-                  backgroundColor: Colors.white.withOpacity(0.9),
-                  onSelected: (_) => setState(() => filterEmotion = emotion),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 0,
-                  pressElevation: 0,
-                ),
-              );
-            }).toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildCalendarContainer(double screenWidth) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SlideTransition(
       position: _slideAnimation,
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         padding: EdgeInsets.all(screenWidth > 600 ? 24 : 20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
+          color: (isDark ? LifewispColors.darkCardBg : Colors.white).withOpacity(0.95),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.08),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -439,6 +241,7 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
   Widget _buildCalendarHeader(double screenWidth) {
     final headerFontSize = _getResponsiveFontSize(screenWidth, 18.0);
     final iconSize = screenWidth > 600 ? 28.0 : 24.0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -453,14 +256,14 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
               );
             });
           },
-          color: const Color(0xFF6B73FF),
+          color: isDark ? LifewispColors.darkPrimary : LifewispColors.primary,
         ),
         Text(
           '${selectedDate.year}년 ${selectedDate.month}월',
           style: GoogleFonts.notoSans(
             fontSize: headerFontSize,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF2D3748),
+            color: isDark ? LifewispColors.darkMainText : LifewispColors.darkGray,
           ),
         ),
         IconButton(
@@ -473,7 +276,7 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
               );
             });
           },
-          color: const Color(0xFF6B73FF),
+          color: isDark ? LifewispColors.darkPrimary : LifewispColors.primary,
         ),
       ],
     );
@@ -481,237 +284,176 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
 
   Widget _buildWeekdayHeader(double screenWidth) {
     final weekdayFontSize = _getResponsiveFontSize(screenWidth, 14.0);
-    final cellSize = screenWidth > 600 ? 48.0 : 40.0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: ['일', '월', '화', '수', '목', '금', '토']
-          .map((day) => Container(
-        width: cellSize,
-        height: cellSize,
-        alignment: Alignment.center,
-        child: Text(
-          day,
-          style: GoogleFonts.notoSans(
-            fontSize: weekdayFontSize,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[600],
+    return Container(
+      width: double.infinity,
+      child: Row(
+        children: ['일', '월', '화', '수', '목', '금', '토']
+            .map((day) => Expanded(
+          child: Container(
+            height: 40,
+            alignment: Alignment.center,
+            child: Text(
+              day,
+              style: GoogleFonts.notoSans(
+                fontSize: weekdayFontSize,
+                fontWeight: FontWeight.w600,
+                color: isDark ? LifewispColors.darkSubText : Colors.grey[600],
+              ),
+            ),
           ),
-        ),
-      ))
-          .toList(),
+        ))
+            .toList(),
+      ),
     );
   }
 
   Widget _buildCalendarGrid(double screenWidth) {
     final records = Provider.of<EmotionProvider>(context).records;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double availableWidth = constraints.maxWidth;
-        double cellSize = (availableWidth - 48) / 7;
-        double cellHeight = cellSize * 1.15;
-        cellSize = cellSize.clamp(32.0, 60.0);
-        cellHeight = cellHeight.clamp(36.0, 70.0);
+    final emotionData = _getEmotionData(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return SizedBox(
-          height: cellHeight * 6,
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-              childAspectRatio: cellSize / cellHeight,
-            ),
-            itemCount: 42,
-            itemBuilder: (context, index) {
-              final firstDay = DateTime(selectedDate.year, selectedDate.month, 1);
-              final weekDay = firstDay.weekday % 7;
-              final dayNum = index - weekDay + 1;
-              final daysInMonth = DateTime(selectedDate.year, selectedDate.month + 1, 0).day;
+    // 데모 데이터 추가 (실제 데이터가 없을 때)
+    final demoRecords = [
+      EmotionRecord(date: DateTime(selectedDate.year, selectedDate.month, 5), emotion: 'happy', diary: '행복한 하루'),
+      EmotionRecord(date: DateTime(selectedDate.year, selectedDate.month, 12), emotion: 'excited', diary: '신나는 하루'),
+      EmotionRecord(date: DateTime(selectedDate.year, selectedDate.month, 18), emotion: 'calm', diary: '평온한 하루'),
+      EmotionRecord(date: DateTime(selectedDate.year, selectedDate.month, 25), emotion: 'love', diary: '사랑스러운 하루'),
+    ];
 
-              if (dayNum < 1 || dayNum > daysInMonth) {
-                return const SizedBox();
-              }
+    final allRecords = records.isEmpty ? demoRecords : records;
 
-              // 실제 기록 데이터에서 해당 날짜의 감정 찾기
-              final record = records.firstWhere(
-                (r) => r.date.year == selectedDate.year && r.date.month == selectedDate.month && r.date.day == dayNum,
-                orElse: () => EmotionRecord(date: DateTime(2000), emotion: '', diary: ''),
-              );
-              final emotion = record.emotion;
-              final emotionInfo = emotion != null ? emotionData[emotion] : null;
+    final firstDay = DateTime(selectedDate.year, selectedDate.month, 1);
+    final weekDay = firstDay.weekday % 7;
+    final daysInMonth = DateTime(selectedDate.year, selectedDate.month + 1, 0).day;
 
-              final isToday = dayNum == DateTime.now().day &&
-                  selectedDate.month == DateTime.now().month &&
-                  selectedDate.year == DateTime.now().year;
+    return Container(
+      width: double.infinity,
+      child: Column(
+        children: List.generate(6, (weekIndex) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 6.0),
+            child: Row(
+              children: List.generate(7, (dayIndex) {
+                final index = weekIndex * 7 + dayIndex;
+                final dayNum = index - weekDay + 1;
 
-              return GestureDetector(
-                onTap: () {
-                  // 상세 정보 보기 등 추가 구현 가능
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  decoration: BoxDecoration(
-                    color: isToday
-                        ? const Color(0xFF6B73FF)
-                        : emotionInfo != null
-                        ? emotionInfo['color'].withOpacity(0.15)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(cellSize * 0.28),
-                    border: isToday
-                        ? Border.all(
-                      color: const Color(0xFF6B73FF),
-                      width: 2,
-                    )
-                        : null,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '$dayNum',
-                        style: GoogleFonts.notoSans(
-                          fontSize: (cellSize * 0.32).clamp(10.0, 16.0),
-                          fontWeight: FontWeight.w500,
-                          color: isToday
-                              ? Colors.white
-                              : const Color(0xFF2D3748),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (emotionInfo != null)
-                        Padding(
-                          padding: EdgeInsets.only(top: cellSize * 0.08),
-                          child: SizedBox(
-                            height: (cellSize * 0.48).clamp(12.0, 24.0),
-                            child: FittedBox(
-                              fit: BoxFit.contain,
-                              child: RabbitEmoticon(emotion: _mapStringToRabbitEmotion(emotion ?? '')),
+                if (dayNum < 1 || dayNum > daysInMonth) {
+                  return Expanded(
+                    child: Container(
+                      height: screenWidth > 600 ? 65 : 55,
+                      child: const SizedBox(),
+                    ),
+                  );
+                }
+
+                // 실제 기록 데이터에서 해당 날짜의 감정 찾기
+                final record = allRecords.firstWhere(
+                      (r) => r.date.year == selectedDate.year &&
+                      r.date.month == selectedDate.month &&
+                      r.date.day == dayNum,
+                  orElse: () => EmotionRecord(date: DateTime(2000), emotion: '', diary: ''),
+                );
+                final emotion = record.emotion;
+                final emotionInfo = emotion.isNotEmpty ? emotionData[emotion] : null;
+
+                final isToday = dayNum == DateTime.now().day &&
+                    selectedDate.month == DateTime.now().month &&
+                    selectedDate.year == DateTime.now().year;
+
+                final circleSize = screenWidth > 600 ? 43.0 : 35.0;
+
+                return Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 1.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        print('날짜 $dayNum 클릭됨, 감정: $emotion');
+                      },
+                      child: Container(
+                        height: screenWidth > 600 ? 65 : 55,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // 감정 동그라미
+                            Container(
+                              width: circleSize,
+                              height: circleSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: emotionInfo != null
+                                    ? emotionInfo['color'].withOpacity(0.15)
+                                    : Colors.transparent,
+                                border: Border.all(
+                                  color: isToday
+                                      ? (isDark ? LifewispColors.darkPrimary : LifewispColors.primary)
+                                      : emotionInfo != null
+                                      ? emotionInfo['color']
+                                      : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                                  width: isToday ? 2.5 : (emotionInfo != null ? 2 : 1),
+                                ),
+                                boxShadow: emotionInfo != null ? [
+                                  BoxShadow(
+                                    color: emotionInfo['color'].withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ] : isToday ? [
+                                  BoxShadow(
+                                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.primary).withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ] : [],
+                              ),
+                              child: emotionInfo != null
+                                  ? ClipOval(
+                                child: RabbitEmoticon(
+                                  emotion: _mapStringToRabbitEmotion(emotion),
+                                  size: circleSize - 4, // 테두리 고려하여 약간 작게
+                                  backgroundColor: Colors.transparent,
+                                  borderColor: Colors.transparent,
+                                  borderWidth: 0,
+                                ),
+                              )
+                                  : isToday
+                                  ? Center(
+                                child: Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDark ? LifewispColors.darkPrimary : LifewispColors.primary,
+                                  ),
+                                ),
+                              )
+                                  : null,
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEmotionStatistics(double screenWidth) {
-    final records = Provider.of<EmotionProvider>(context).records;
-    final titleFontSize = _getResponsiveFontSize(screenWidth, 16.0);
-    final itemFontSize = _getResponsiveFontSize(screenWidth, 14.0);
-    final percentageFontSize = _getResponsiveFontSize(screenWidth, 12.0);
-
-    // 이번 달 감정별 카운트 계산
-    final Map<String, int> emotionCounts = {};
-    int total = 0;
-    for (final r in records) {
-      if (r.date.year == selectedDate.year && r.date.month == selectedDate.month) {
-        emotionCounts[r.emotion] = (emotionCounts[r.emotion] ?? 0) + 1;
-        total++;
-      }
-    }
-
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        padding: EdgeInsets.all(screenWidth > 600 ? 24 : 20),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  '📊',
-                  style: TextStyle(fontSize: titleFontSize + 4),
-                ),
-                Text(
-                  '이번 달 감정 통계',
-                  style: GoogleFonts.notoSans(
-                    fontSize: titleFontSize,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2D3748),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: screenWidth > 600 ? 20 : 16),
-            ...emotionData.entries.take(4).map((entry) {
-              final emotion = entry.key;
-              final data = entry.value;
-              final count = emotionCounts[emotion] ?? 0;
-              final percentage = total > 0 ? count / total : 0.0;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        RabbitEmoticon(emotion: _mapStringToRabbitEmotion(emotion)),
-                        const SizedBox(width: 8),
-                        Text(
-                          data['name'],
-                          style: GoogleFonts.notoSans(
-                            fontSize: itemFontSize,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF2D3748),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${(percentage * 100).toInt()}%',
-                          style: GoogleFonts.notoSans(
-                            fontSize: percentageFontSize,
-                            fontWeight: FontWeight.w600,
-                            color: data['color'],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      height: screenWidth > 600 ? 8 : 6,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: percentage,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: data['color'],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                            const SizedBox(height: 4),
+                            // 날짜 숫자
+                            Text(
+                              '$dayNum',
+                              style: GoogleFonts.notoSans(
+                                fontSize: screenWidth > 600 ? 12 : 11,
+                                fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                                color: isToday
+                                    ? (isDark ? LifewispColors.darkPrimary : LifewispColors.primary)
+                                    : emotionInfo != null
+                                    ? emotionInfo['color']
+                                    : (isDark ? LifewispColors.darkSubText : Colors.grey[700]),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ),
+                  ),
+                );
+              }),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -719,21 +461,28 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
   Widget _buildEmotionInsights(double screenWidth) {
     final titleFontSize = _getResponsiveFontSize(screenWidth, 16.0);
     final contentFontSize = _getResponsiveFontSize(screenWidth, 14.0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
         padding: EdgeInsets.all(screenWidth > 600 ? 24 : 20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6B73FF), Color(0xFF9333EA)],
+          gradient: isDark
+              ? LinearGradient(
+            colors: [LifewispColors.darkPurple, LifewispColors.darkPurpleDark],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+              : const LinearGradient(
+            colors: [LifewispColors.purple, LifewispColors.purpleDark],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6B73FF).withOpacity(0.3),
+              color: (isDark ? LifewispColors.darkPurple : LifewispColors.purple).withOpacity(0.3),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -754,7 +503,7 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
                   style: GoogleFonts.notoSans(
                     fontSize: titleFontSize,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: LifewispColors.white,
                   ),
                 ),
               ],
@@ -764,7 +513,7 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
               '이번 달에는 긍정적인 감정이 많이 나타났어요! 😊\n특히 주말에 행복한 순간들이 많았답니다.',
               style: GoogleFonts.notoSans(
                 fontSize: contentFontSize,
-                color: Colors.white.withOpacity(0.9),
+                color: LifewispColors.white.withOpacity(0.9),
                 height: 1.5,
               ),
             ),

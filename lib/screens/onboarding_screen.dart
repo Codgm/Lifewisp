@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/rabbit_emoticon.dart';
+import '../utils/theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -77,23 +78,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFE5F1), // 연한 핑크
-              Color(0xFFF0F8FF), // 연한 하늘색
-              Color(0xFFE8F5E8), // 연한 민트
-              Color(0xFFFFF8E1), // 연한 노랑
-            ],
-            stops: [0.0, 0.3, 0.7, 1.0],
-          ),
+          gradient: LifewispGradients.onboardingBgFor('emotion', dark: isDark),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -127,7 +120,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                   gradient: LinearGradient(
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
-                                    colors: [
+                                    colors: isDark ? [
+                                      Color(0xFFEC4899),
+                                      Color(0xFF6B46C1),
+                                      Color(0xFF10B981),
+                                    ] : [
                                       Color(0xFFFFB6C1),
                                       Color(0xFFDDA0DD),
                                       Color(0xFF98FB98),
@@ -135,7 +132,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Color(0xFFFFB6C1).withOpacity(0.4),
+                                      color: (isDark ? Color(0xFFEC4899) : Color(0xFFFFB6C1))
+                                          .withOpacity(0.4),
                                       blurRadius: 25,
                                       offset: Offset(0, 15),
                                     ),
@@ -158,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                         height: 20,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Colors.white.withOpacity(0.8),
+                                          color: Colors.white.withOpacity(isDark ? 0.9 : 0.8),
                                         ),
                                       ),
                                     ),
@@ -170,7 +168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                         height: 12,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Colors.white.withOpacity(0.6),
+                                          color: Colors.white.withOpacity(isDark ? 0.7 : 0.6),
                                         ),
                                       ),
                                     ),
@@ -193,7 +191,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             children: [
                               ShaderMask(
                                 shaderCallback: (bounds) => LinearGradient(
-                                  colors: [
+                                  colors: isDark ? [
+                                    Color(0xFFEC4899),
+                                    Color(0xFF6B46C1),
+                                    Color(0xFF3B82F6),
+                                  ] : [
                                     Color(0xFFFF6B9D),
                                     Color(0xFF9B59B6),
                                     Color(0xFF3498DB),
@@ -201,24 +203,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 ).createShader(bounds),
                                 child: Text(
                                   'Lifewisp',
-                                  style: TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: 1.5,
-                                  ),
+                                  style: LifewispTextStyles.onboardingTitle(context),
                                 ),
                               ),
                               SizedBox(height: 16),
                               Text(
                                 '당신의 하루를 감정으로 기록하고,\nAI와 함께 회고하는\n라이프 아카이빙 도구',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF444444),
-                                  height: 1.4,
-                                ),
+                                style: LifewispTextStyles.onboardingSubtitle(context),
                               ),
                             ],
                           ),
@@ -233,11 +225,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         child: Container(
                           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
+                            color: (isDark
+                                ? LifewispColors.darkCardBg
+                                : Colors.white).withOpacity(isDark ? 0.9 : 0.8),
                             borderRadius: BorderRadius.circular(25),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: (isDark ? Colors.black : Colors.black)
+                                    .withOpacity(isDark ? 0.3 : 0.1),
                                 blurRadius: 15,
                                 offset: Offset(0, 5),
                               ),
@@ -264,11 +259,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         child: Container(
                           padding: EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
+                            color: (isDark
+                                ? LifewispColors.darkCardBg
+                                : Colors.white).withOpacity(isDark ? 0.95 : 0.9),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: (isDark ? Colors.black : Colors.black)
+                                    .withOpacity(isDark ? 0.3 : 0.1),
                                 blurRadius: 20,
                                 offset: Offset(0, 10),
                               ),
@@ -280,31 +278,31 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 icon: Icons.edit_rounded,
                                 title: '감정/일기 기록',
                                 subtitle: '매일의 감정을 쉽고 간편하게',
-                                color: Color(0xFFFF6B9D),
+                                color: isDark ? Color(0xFFEC4899) : Color(0xFFFF6B9D),
                               ),
                               _buildFeatureItem(
                                 icon: Icons.analytics_rounded,
                                 title: '감정 분석/그래프',
                                 subtitle: '감정 패턴을 시각적으로 확인',
-                                color: Color(0xFF3498DB),
+                                color: isDark ? Color(0xFF3B82F6) : Color(0xFF3498DB),
                               ),
                               _buildFeatureItem(
                                 icon: Icons.emoji_emotions_rounded,
                                 title: '감정 성장 캐릭터',
                                 subtitle: '귀여운 캐릭터와 함께 성장',
-                                color: Color(0xFFFFB347),
+                                color: isDark ? Color(0xFFF59E0B) : Color(0xFFFFB347),
                               ),
                               _buildFeatureItem(
                                 icon: Icons.psychology_rounded,
                                 title: 'AI 회고/코멘트',
                                 subtitle: '개인화된 감정 분석과 조언',
-                                color: Color(0xFF9B59B6),
+                                color: isDark ? Color(0xFF6B46C1) : Color(0xFF9B59B6),
                               ),
                               _buildFeatureItem(
                                 icon: Icons.share_rounded,
                                 title: '감정 기록 공유/저장',
                                 subtitle: '소중한 추억을 안전하게 보관',
-                                color: Color(0xFF2ECC71),
+                                color: isDark ? Color(0xFF10B981) : Color(0xFF2ECC71),
                                 isLast: true,
                               ),
                             ],
@@ -321,18 +319,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           width: double.infinity,
                           height: 56,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFFFF6B9D),
-                                Color(0xFF9B59B6),
-                              ],
-                            ),
+                            gradient: isDark
+                                ? LinearGradient(colors: [Color(0xFFEC4899), Color(0xFF6B46C1)])
+                                : LifewispGradients.statCard,
                             borderRadius: BorderRadius.circular(28),
                             boxShadow: [
                               BoxShadow(
-                                color: Color(0xFFFF6B9D).withOpacity(0.4),
+                                color: (isDark ? Color(0xFFEC4899) : LifewispColors.pink)
+                                    .withOpacity(0.4),
                                 blurRadius: 15,
                                 offset: Offset(0, 8),
                               ),
@@ -349,11 +343,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             ),
                             child: Text(
                               '시작하기 ✨',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                              style: LifewispTextStyles.onboardingButton(context),
                             ),
                           ),
                         ),
@@ -372,6 +362,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Widget _buildEmotionIcon(String emoji, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         Container(
@@ -379,10 +371,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           height: 45,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
+            color: isDark ? LifewispColors.darkCardBg : Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: (isDark ? Colors.black : Colors.black)
+                    .withOpacity(isDark ? 0.3 : 0.1),
                 blurRadius: 8,
                 offset: Offset(0, 2),
               ),
@@ -398,11 +391,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         SizedBox(height: 6),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF666666),
-          ),
+          style: LifewispTextStyles.onboardingEmotionLabel(context),
         ),
       ],
     );
@@ -439,19 +428,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
-                  ),
+                  style: LifewispTextStyles.onboardingFeatureTitle(context),
                 ),
                 SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF666666),
-                  ),
+                  style: LifewispTextStyles.onboardingFeatureSubtitle(context),
                 ),
               ],
             ),

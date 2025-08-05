@@ -84,4 +84,4 @@ class RabbitEmoticon extends StatelessWidget {
         return 'assets/emoticons/rabbit-confidence.jpg';
     }
   }
-} 
+}
