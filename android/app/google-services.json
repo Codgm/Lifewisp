@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "410981489784",
+    "project_id": "lifewisp-1c917",
+    "storage_bucket": "lifewisp-1c917.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:410981489784:android:e2530c61dd2dab4e89e18d",
+        "android_client_info": {
+          "package_name": "com.lifewisp.lifewisp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "410981489784-khr43qmh1t57qt07k1v7bb83d93l10t9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lifewisp.lifewisp",
+            "certificate_hash": "6f47752e2ca0c71255cadf12bc2fd30f5b7d5e13"
+          }
+        },
+        {
+          "client_id": "410981489784-kksc1dm7fvr9bom6tkt87s0altfv08pg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtZd93xb-FsLx07OHhr69a_6pE52xYJQA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "410981489784-kksc1dm7fvr9bom6tkt87s0altfv08pg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
