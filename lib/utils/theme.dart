@@ -342,6 +342,7 @@ class LifewispColors {
   static const Color darkSuccess = Color(0xFF059669);
   static const Color darkPinkAccent = Color(0xFFF472B6);
   static const Color darkAccent = Color(0xFF6B46C1);
+  static const Color darkSubBg = Color(0xFF404249);
   static const Color warningDark = Color(0xFFE65100);
 }
 
