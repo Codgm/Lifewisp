@@ -87,11 +87,152 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
     super.dispose();
   }
 
-  // Web-compatible image widget
-  Widget _buildWebImage(String imagePath, bool isDark) {
-    // For web, we'll show a placeholder since we can't access local files
+  // Web-compatible image widget - 수정된 버전
+  Widget _buildImageWidget(String imagePath, bool isDark, {double? width, double? height}) {
+    // 웹에서 이미지 처리
+    if (kIsWeb) {
+      // EmotionProvider에서 웹 이미지 데이터 가져오기
+      final imageBytes = EmotionProvider.getWebImage(imagePath);
+
+      if (imageBytes != null) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.memory(
+            imageBytes,
+            width: width ?? 160,
+            height: height ?? 200,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildErrorImage(isDark, width, height);
+            },
+          ),
+        );
+      } else {
+        // 캐시에 이미지가 없을 때 개선된 플레이스홀더 표시
+        return Container(
+          width: width ?? 160,
+          height: height ?? 200,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                isDark ? LifewispColors.darkCardBg : const Color(0xFFF8F9FA),
+                isDark ? LifewispColors.darkCardBg.withOpacity(0.8) : const Color(0xFFE9ECEF),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? LifewispColors.darkCardBorder : const Color(0xFFDEE2E6),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.photo_library_rounded,
+                size: 32,
+                color: isDark ? LifewispColors.darkPrimary : LifewispColors.purple,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '웹 이미지',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '이미지를 불러올 수\n없습니다',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
+    // 모바일에서는 File로 이미지 표시
+    try {
+      final file = File(imagePath);
+      if (file.existsSync()) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.file(
+            file,
+            width: width ?? 160,
+            height: height ?? 200,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildErrorImage(isDark, width, height);
+            },
+          ),
+        );
+      } else {
+        return _buildFileNotFoundImage(isDark, width, height);
+      }
+    } catch (e) {
+      return _buildErrorImage(isDark, width, height);
+    }
+  }
+
+  // 에러 이미지 위젯
+  Widget _buildErrorImage(bool isDark, double? width, double? height) {
     return Container(
-      color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
+      width: width ?? 160,
+      height: height ?? 200,
+      decoration: BoxDecoration(
+        color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? LifewispColors.darkCardBorder : Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.broken_image_rounded,
+            size: 40,
+            color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '이미지를 불러올 수\n없습니다',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+              height: 1.3,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 파일 없음 이미지 위젯
+  Widget _buildFileNotFoundImage(bool isDark, double? width, double? height) {
+    return Container(
+      width: width ?? 160,
+      height: height ?? 200,
+      decoration: BoxDecoration(
+        color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? LifewispColors.darkCardBorder : Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -102,10 +243,11 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            '웹에서는 이미지를 표시할 수 없습니다',
+            '이미지 파일이\n없습니다',
             style: TextStyle(
               fontSize: 12,
               color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
+              height: 1.3,
             ),
             textAlign: TextAlign.center,
           ),
@@ -144,7 +286,9 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
 
   // 감정에 따른 색상 반환 함수 (theme.dart 색상 사용)
   Color _getEmotionColor(String emotion, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
 
     switch (emotion.toLowerCase()) {
       case 'happy':
@@ -174,7 +318,9 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -208,8 +354,11 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                   _buildActionButton(
                     context,
                     icon: Icons.edit_rounded,
-                    backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
-                    iconColor: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                    backgroundColor: isDark ? LifewispColors.darkCardBg : Colors
+                        .white,
+                    iconColor: isDark
+                        ? LifewispColors.darkMainText
+                        : LifewispColors.mainText,
                     onPressed: () async {
                       final updated = await Navigator.push(
                         context,
@@ -236,7 +385,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                         ),
                       );
                       if (updated != null && updated is EmotionRecord) {
-                        context.read<EmotionProvider>().editRecord(widget.record, updated);
+                        context.read<EmotionProvider>().editRecord(
+                            widget.record, updated);
                       }
                     },
                   ),
@@ -276,14 +426,18 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  isDark ? LifewispColors.darkCardBg : Colors.white,
-                                  isDark ? LifewispColors.darkCardBg.withOpacity(0.95) : Colors.white.withOpacity(0.95),
+                                  isDark ? LifewispColors.darkCardBg : Colors
+                                      .white,
+                                  isDark ? LifewispColors.darkCardBg
+                                      .withOpacity(0.95) : Colors.white
+                                      .withOpacity(0.95),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(32),
                               boxShadow: [
                                 BoxShadow(
-                                  color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.1),
+                                  color: (isDark ? Colors.black : Colors.black)
+                                      .withOpacity(isDark ? 0.3 : 0.1),
                                   blurRadius: 24,
                                   offset: const Offset(0, 12),
                                   spreadRadius: 4,
@@ -294,10 +448,15 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                               children: [
                                 // RabbitEmoticon 사용
                                 RabbitEmoticon(
-                                  emotion: _getEmotionType(widget.record.emotion),
+                                  emotion: _getEmotionType(
+                                      widget.record.emotion),
                                   size: 140,
-                                  backgroundColor: _getEmotionColor(widget.record.emotion, context).withOpacity(0.1),
-                                  borderColor: _getEmotionColor(widget.record.emotion, context).withOpacity(0.3),
+                                  backgroundColor: _getEmotionColor(
+                                      widget.record.emotion, context)
+                                      .withOpacity(0.1),
+                                  borderColor: _getEmotionColor(
+                                      widget.record.emotion, context)
+                                      .withOpacity(0.3),
                                   borderWidth: 3,
                                 ),
 
@@ -305,19 +464,24 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
 
                                 // 감정 라벨
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        _getEmotionColor(widget.record.emotion, context).withOpacity(0.2),
-                                        _getEmotionColor(widget.record.emotion, context).withOpacity(0.1),
+                                        _getEmotionColor(widget.record.emotion,
+                                            context).withOpacity(0.2),
+                                        _getEmotionColor(widget.record.emotion,
+                                            context).withOpacity(0.1),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                      color: _getEmotionColor(widget.record.emotion, context).withOpacity(0.3),
+                                      color: _getEmotionColor(
+                                          widget.record.emotion, context)
+                                          .withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
@@ -326,7 +490,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
-                                      color: _getEmotionColor(widget.record.emotion, context),
+                                      color: _getEmotionColor(
+                                          widget.record.emotion, context),
                                       letterSpacing: 1.2,
                                     ),
                                   ),
@@ -336,25 +501,35 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
 
                                 // 날짜
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 12),
                                   decoration: BoxDecoration(
-                                    color: isDark ? LifewispColors.darkCardBg.withOpacity(0.5) : const Color(0xFFF8F9FA),
+                                    color: isDark ? LifewispColors.darkCardBg
+                                        .withOpacity(0.5) : const Color(
+                                        0xFFF8F9FA),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                      color: isDark ? LifewispColors.darkCardBorder : const Color(0xFFE9ECEF),
+                                      color: isDark ? LifewispColors
+                                          .darkCardBorder : const Color(
+                                          0xFFE9ECEF),
                                       width: 1,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.2 : 0.05),
+                                        color: (isDark ? Colors.black : Colors
+                                            .black).withOpacity(
+                                            isDark ? 0.2 : 0.05),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
                                   child: Text(
-                                    '${widget.record.date.year}년 ${widget.record.date.month}월 ${widget.record.date.day}일',
-                                    style: LifewispTextStylesExt.subtitleFor(context).copyWith(
+                                    '${widget.record.date.year}년 ${widget.record
+                                        .date.month}월 ${widget.record.date
+                                        .day}일',
+                                    style: LifewispTextStylesExt.subtitleFor(
+                                        context).copyWith(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 0.5,
@@ -369,7 +544,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                         const SizedBox(height: 32),
 
                         // 카테고리 표시 (추가된 부분)
-                        if (widget.record.categories != null && widget.record.categories!.isNotEmpty) ...[
+                        if (widget.record.categories != null &&
+                            widget.record.categories!.isNotEmpty) ...[
                           SlideTransition(
                             position: _slideAnimation,
                             child: Container(
@@ -380,14 +556,19 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    isDark ? LifewispColors.darkCardBg : Colors.white,
-                                    isDark ? LifewispColors.darkCardBg.withOpacity(0.98) : Colors.white.withOpacity(0.98),
+                                    isDark ? LifewispColors.darkCardBg : Colors
+                                        .white,
+                                    isDark ? LifewispColors.darkCardBg
+                                        .withOpacity(0.98) : Colors.white
+                                        .withOpacity(0.98),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(28),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.08),
+                                    color: (isDark ? Colors.black : Colors
+                                        .black).withOpacity(
+                                        isDark ? 0.3 : 0.08),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                     spreadRadius: 2,
@@ -406,13 +587,17 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                             colors: [
-                                              LifewispColors.purple.withOpacity(0.2),
-                                              LifewispColors.purple.withOpacity(0.1),
+                                              LifewispColors.purple.withOpacity(
+                                                  0.2),
+                                              LifewispColors.purple.withOpacity(
+                                                  0.1),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                              16),
                                           border: Border.all(
-                                            color: LifewispColors.purple.withOpacity(0.3),
+                                            color: LifewispColors.purple
+                                                .withOpacity(0.3),
                                             width: 1,
                                           ),
                                         ),
@@ -425,7 +610,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                       const SizedBox(width: 16),
                                       Text(
                                         '하루의 특별한 순간들',
-                                        style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                        style: LifewispTextStylesExt.titleFor(
+                                            context).copyWith(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -436,21 +622,30 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                   Wrap(
                                     spacing: 12,
                                     runSpacing: 12,
-                                    children: widget.record.categories!.map((category) {
+                                    children: widget.record.categories!.map((
+                                        category) {
                                       return Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 10),
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                             colors: [
-                                              _getEmotionColor(widget.record.emotion, context).withOpacity(0.15),
-                                              _getEmotionColor(widget.record.emotion, context).withOpacity(0.08),
+                                              _getEmotionColor(
+                                                  widget.record.emotion,
+                                                  context).withOpacity(0.15),
+                                              _getEmotionColor(
+                                                  widget.record.emotion,
+                                                  context).withOpacity(0.08),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                              20),
                                           border: Border.all(
-                                            color: _getEmotionColor(widget.record.emotion, context).withOpacity(0.3),
+                                            color: _getEmotionColor(
+                                                widget.record.emotion, context)
+                                                .withOpacity(0.3),
                                             width: 1,
                                           ),
                                         ),
@@ -459,7 +654,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
-                                            color: _getEmotionColor(widget.record.emotion, context),
+                                            color: _getEmotionColor(
+                                                widget.record.emotion, context),
                                             letterSpacing: 0.3,
                                           ),
                                         ),
@@ -473,8 +669,9 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                           const SizedBox(height: 32),
                         ],
 
-                        // 사진 표시 (추가된 부분)
-                        if (widget.record.imagePaths != null && widget.record.imagePaths!.isNotEmpty) ...[
+                        // 사진 표시 (수정된 부분)
+                        if (widget.record.imagePaths != null &&
+                            widget.record.imagePaths!.isNotEmpty) ...[
                           SlideTransition(
                             position: _slideAnimation,
                             child: Container(
@@ -485,14 +682,19 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    isDark ? LifewispColors.darkCardBg : Colors.white,
-                                    isDark ? LifewispColors.darkCardBg.withOpacity(0.98) : Colors.white.withOpacity(0.98),
+                                    isDark ? LifewispColors.darkCardBg : Colors
+                                        .white,
+                                    isDark ? LifewispColors.darkCardBg
+                                        .withOpacity(0.98) : Colors.white
+                                        .withOpacity(0.98),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(28),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.08),
+                                    color: (isDark ? Colors.black : Colors
+                                        .black).withOpacity(
+                                        isDark ? 0.3 : 0.08),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                     spreadRadius: 2,
@@ -511,13 +713,17 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                             colors: [
-                                              const Color(0xFF4FACFE).withOpacity(0.2),
-                                              const Color(0xFF00F2FE).withOpacity(0.1),
+                                              const Color(0xFF4FACFE)
+                                                  .withOpacity(0.2),
+                                              const Color(0xFF00F2FE)
+                                                  .withOpacity(0.1),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                              16),
                                           border: Border.all(
-                                            color: const Color(0xFF4FACFE).withOpacity(0.3),
+                                            color: const Color(0xFF4FACFE)
+                                                .withOpacity(0.3),
                                             width: 1,
                                           ),
                                         ),
@@ -530,7 +736,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                       const SizedBox(width: 16),
                                       Text(
                                         '소중한 순간들',
-                                        style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                        style: LifewispTextStylesExt.titleFor(
+                                            context).copyWith(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -542,80 +749,32 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                     height: 200,
                                     child: ListView.builder(
                                       scrollDirection: Axis.horizontal,
-                                      itemCount: widget.record.imagePaths!.length,
+                                      itemCount: widget.record.imagePaths!
+                                          .length,
                                       itemBuilder: (context, index) {
-                                        final imagePath = widget.record.imagePaths![index];
+                                        final imagePath = widget.record
+                                            .imagePaths![index];
                                         return Container(
                                           width: 160,
                                           margin: EdgeInsets.only(
-                                            right: index < widget.record.imagePaths!.length - 1 ? 16 : 0,
+                                            right: index <
+                                                widget.record.imagePaths!
+                                                    .length - 1 ? 16 : 0,
                                           ),
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius: BorderRadius.circular(
+                                                20),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.1),
+                                                color: Colors.black.withOpacity(
+                                                    0.1),
                                                 blurRadius: 12,
                                                 offset: const Offset(0, 6),
                                               ),
                                             ],
                                           ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(20),
-                                            child: kIsWeb
-                                                ? _buildWebImage(imagePath, isDark)
-                                                : (File(imagePath).existsSync()
-                                                    ? Image.file(
-                                                        File(imagePath),
-                                                        fit: BoxFit.cover,
-                                                        errorBuilder: (context, error, stackTrace) {
-                                                          return Container(
-                                                            color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
-                                                            child: Column(
-                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                              children: [
-                                                                Icon(
-                                                                  Icons.broken_image_rounded,
-                                                                  size: 40,
-                                                                  color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
-                                                                ),
-                                                                const SizedBox(height: 8),
-                                                                Text(
-                                                                  '이미지를 불러올 수 없습니다',
-                                                                  style: TextStyle(
-                                                                    fontSize: 12,
-                                                                    color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
-                                                                  ),
-                                                                  textAlign: TextAlign.center,
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          );
-                                                        },
-                                                    )
-                                                    : Container(
-                                                        color: isDark ? LifewispColors.darkCardBg : Colors.grey[200],
-                                                        child: Column(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          children: [
-                                                            Icon(
-                                                              Icons.image_not_supported_rounded,
-                                                              size: 40,
-                                                              color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
-                                                            ),
-                                                            const SizedBox(height: 8),
-                                                            Text(
-                                                              '이미지 파일이 없습니다',
-                                                              style: TextStyle(
-                                                                fontSize: 12,
-                                                                color: isDark ? LifewispColors.darkSubText : Colors.grey[500],
-                                                              ),
-                                                              textAlign: TextAlign.center,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                    )),
-                                          ),
+                                          child: _buildImageWidget(
+                                              imagePath, isDark),
                                         );
                                       },
                                     ),
@@ -628,7 +787,9 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                         ],
 
                         // 일기 내용 카드
-                        if (widget.record.diary.trim().isNotEmpty) ...[
+                        if (widget.record.diary
+                            .trim()
+                            .isNotEmpty) ...[
                           SlideTransition(
                             position: _slideAnimation,
                             child: Container(
@@ -639,14 +800,19 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    isDark ? LifewispColors.darkCardBg : Colors.white,
-                                    isDark ? LifewispColors.darkCardBg.withOpacity(0.98) : Colors.white.withOpacity(0.98),
+                                    isDark ? LifewispColors.darkCardBg : Colors
+                                        .white,
+                                    isDark ? LifewispColors.darkCardBg
+                                        .withOpacity(0.98) : Colors.white
+                                        .withOpacity(0.98),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(28),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.08),
+                                    color: (isDark ? Colors.black : Colors
+                                        .black).withOpacity(
+                                        isDark ? 0.3 : 0.08),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                     spreadRadius: 2,
@@ -665,13 +831,17 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                             colors: [
-                                              LifewispColors.pink.withOpacity(0.2),
-                                              LifewispColors.pink.withOpacity(0.1),
+                                              LifewispColors.pink.withOpacity(
+                                                  0.2),
+                                              LifewispColors.pink.withOpacity(
+                                                  0.1),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                              16),
                                           border: Border.all(
-                                            color: LifewispColors.pink.withOpacity(0.3),
+                                            color: LifewispColors.pink
+                                                .withOpacity(0.3),
                                             width: 1,
                                           ),
                                         ),
@@ -684,7 +854,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                       const SizedBox(width: 16),
                                       Text(
                                         '오늘의 기록',
-                                        style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                        style: LifewispTextStylesExt.titleFor(
+                                            context).copyWith(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -700,18 +871,26 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          isDark ? LifewispColors.darkCardBg.withOpacity(0.5) : const Color(0xFFF8F9FA),
-                                          isDark ? LifewispColors.darkCardBg.withOpacity(0.3) : const Color(0xFFF1F3F4),
+                                          isDark ? LifewispColors.darkCardBg
+                                              .withOpacity(0.5) : const Color(
+                                              0xFFF8F9FA),
+                                          isDark ? LifewispColors.darkCardBg
+                                              .withOpacity(0.3) : const Color(
+                                              0xFFF1F3F4),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
-                                        color: isDark ? LifewispColors.darkCardBorder : const Color(0xFFE9ECEF),
+                                        color: isDark ? LifewispColors
+                                            .darkCardBorder : const Color(
+                                            0xFFE9ECEF),
                                         width: 1,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.1 : 0.03),
+                                          color: (isDark ? Colors.black : Colors
+                                              .black).withOpacity(
+                                              isDark ? 0.1 : 0.03),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
@@ -719,7 +898,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                     ),
                                     child: Text(
                                       widget.record.diary,
-                                      style: LifewispTextStylesExt.bodyFor(context).copyWith(
+                                      style: LifewispTextStylesExt.bodyFor(
+                                          context).copyWith(
                                         fontSize: 18,
                                         height: 1.8,
                                         fontWeight: FontWeight.w500,
@@ -775,14 +955,20 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          isDark ? LifewispColors.darkCardBg : Colors.white,
-                                          isDark ? LifewispColors.darkCardBg.withOpacity(0.95) : Colors.white.withOpacity(0.95),
+                                          isDark
+                                              ? LifewispColors.darkCardBg
+                                              : Colors.white,
+                                          isDark ? LifewispColors.darkCardBg
+                                              .withOpacity(0.95) : Colors.white
+                                              .withOpacity(0.95),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: (isDark ? Colors.black : Colors.black).withOpacity(isDark ? 0.3 : 0.1),
+                                          color: (isDark ? Colors.black : Colors
+                                              .black).withOpacity(
+                                              isDark ? 0.3 : 0.1),
                                           blurRadius: 12,
                                           offset: const Offset(0, 4),
                                         ),
@@ -797,11 +983,13 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                   const SizedBox(width: 20),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment
+                                          .start,
                                       children: [
                                         Text(
                                           '감정 통계 보러가기',
-                                          style: LifewispTextStylesExt.titleFor(context).copyWith(
+                                          style: LifewispTextStylesExt.titleFor(
+                                              context).copyWith(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -809,7 +997,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                         const SizedBox(height: 6),
                                         Text(
                                           '나의 감정 패턴을 확인해보세요',
-                                          style: LifewispTextStylesExt.subFor(context).copyWith(
+                                          style: LifewispTextStylesExt.subFor(
+                                              context).copyWith(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -820,7 +1009,9 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: (isDark ? LifewispColors.darkCardBg : Colors.white).withOpacity(0.9),
+                                      color: (isDark
+                                          ? LifewispColors.darkCardBg
+                                          : Colors.white).withOpacity(0.9),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -848,15 +1039,16 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
     );
   }
 
-  Widget _buildActionButton(
-      BuildContext context, {
-        required IconData icon,
-        Gradient? gradient,
-        Color? backgroundColor,
-        Color? iconColor,
-        required VoidCallback onPressed,
-      }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildActionButton(BuildContext context, {
+    required IconData icon,
+    Gradient? gradient,
+    Color? backgroundColor,
+    Color? iconColor,
+    required VoidCallback onPressed,
+  }) {
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -886,115 +1078,119 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
   }
 
   void _showDeleteDialog(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
-        contentPadding: const EdgeInsets.all(32),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    LifewispColors.pink.withOpacity(0.2),
-                    LifewispColors.pinkAccent.withOpacity(0.2),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(
-                  color: LifewispColors.pink.withOpacity(0.3),
-                  width: 2,
-                ),
-              ),
-              child: Icon(
-                Icons.delete_outline_rounded,
-                color: LifewispColors.pink,
-                size: 36,
-              ),
+      builder: (ctx) =>
+          AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
             ),
-            const SizedBox(height: 24),
-            Text(
-              '기록 삭제',
-              style: LifewispTextStylesExt.titleFor(context).copyWith(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '이 감정 기록을 삭제할까요?\n삭제된 기록은 복구할 수 없어요.',
-              textAlign: TextAlign.center,
-              style: LifewispTextStylesExt.subFor(context).copyWith(
-                fontSize: 16,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
+            backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+            contentPadding: const EdgeInsets.all(32),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        LifewispColors.pink.withOpacity(0.2),
+                        LifewispColors.pinkAccent.withOpacity(0.2),
+                      ],
                     ),
-                    child: Text(
-                      '취소',
-                      style: LifewispTextStylesExt.subFor(context).copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(
+                      color: LifewispColors.pink.withOpacity(0.3),
+                      width: 2,
                     ),
+                  ),
+                  child: Icon(
+                    Icons.delete_outline_rounded,
+                    color: LifewispColors.pink,
+                    size: 36,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<EmotionProvider>().deleteRecord(widget.record);
-                      Navigator.of(ctx).pop();
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: LifewispColors.pink,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                      shadowColor: LifewispColors.pink.withOpacity(0.3),
-                    ),
-                    child: Text(
-                      '삭제',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+                const SizedBox(height: 24),
+                Text(
+                  '기록 삭제',
+                  style: LifewispTextStylesExt.titleFor(context).copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '이 감정 기록을 삭제할까요?\n삭제된 기록은 복구할 수 없어요.',
+                  textAlign: TextAlign.center,
+                  style: LifewispTextStylesExt.subFor(context).copyWith(
+                    fontSize: 16,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          '취소',
+                          style: LifewispTextStylesExt.subFor(context).copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.read<EmotionProvider>().deleteRecord(
+                              widget.record);
+                          Navigator.of(ctx).pop();
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: LifewispColors.pink,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                          shadowColor: LifewispColors.pink.withOpacity(0.3),
+                        ),
+                        child: Text(
+                          '삭제',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+      );
+    }
   }
-}
