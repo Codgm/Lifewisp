@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../providers/subscription_provider.dart';
 import '../providers/user_provider.dart';
 import '../widgets/common_app_bar.dart';
 import '../utils/theme.dart';
@@ -169,17 +175,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               ),
               child: userProvider.profileImagePath != null && userProvider.profileImagePath!.isNotEmpty
                   ? ClipOval(
-                      child: Image.asset(
-                        userProvider.profileImagePath!,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
+                      child: _buildProfileImage(userProvider.profileImagePath!),
                     )
                   : Icon(
                       Icons.person,
@@ -212,20 +208,40 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               ],
             ),
           ),
-          GestureDetector(
-            onTap: () => _showProfileEditDialog(context, userProvider),
-            child: Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showImagePickerDialog(context, userProvider),
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.photo_camera,
+                    color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                    size: 20,
+                  ),
+                ),
               ),
-              child: Icon(
-                Icons.edit,
-                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-                size: 20,
+              SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _showProfileEditDialog(context, userProvider),
+                child: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.edit,
+                    color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                    size: 20,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -316,10 +332,10 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
       title: '👤 계정 설정',
       children: [
         _buildTile(
-          icon: Icons.person_outline,
-          title: '프로필 수정',
-          subtitle: '닉네임과 프로필을 변경해요',
-          onTap: () => _showProfileEditDialog(context, userProvider),
+          icon: Icons.subscriptions,
+          title: '구독 관리',
+          subtitle: '프리미엄 구독을 관리해요',
+          onTap: () => _showSubscriptionDialog(context, userProvider),
           isDark: isDark,
         ),
         _buildDivider(isDark),
@@ -1717,6 +1733,412 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             },
             child: Text(
               '로그아웃',
+              style: TextStyle(
+                color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showImagePickerDialog(BuildContext context, UserProvider userProvider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.photo_camera,
+              color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+            ),
+            SizedBox(width: 12),
+            Text(
+              '프로필 사진 변경',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(
+                Icons.photo_library,
+                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+              ),
+              title: Text(
+                '갤러리에서 선택',
+                style: TextStyle(
+                  color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromGallery(context, userProvider);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.camera_alt,
+                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+              ),
+              title: Text(
+                '카메라로 촬영',
+                style: TextStyle(
+                  color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromCamera(context, userProvider);
+              },
+            ),
+            if (userProvider.profileImageUrl != null && userProvider.profileImageUrl!.isNotEmpty)
+              ListTile(
+                leading: Icon(
+                  Icons.delete,
+                  color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+                ),
+                title: Text(
+                  '현재 사진 삭제',
+                  style: TextStyle(
+                    color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _removeProfileImage(context, userProvider);
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '취소',
+              style: TextStyle(
+                color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _pickImageFromGallery(BuildContext context, UserProvider userProvider) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      final Uint8List uint8list = bytes;
+      final String base64Image = 'data:${image.mimeType};base64,${base64Encode(uint8list)}';
+
+      await userProvider.setProfileImage(base64Image);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '프로필 사진이 변경되었어요! 📸',
+            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          ),
+          backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  void _pickImageFromCamera(BuildContext context, UserProvider userProvider) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      final Uint8List uint8list = bytes;
+      final String base64Image = 'data:${image.mimeType};base64,${base64Encode(uint8list)}';
+
+      await userProvider.setProfileImage(base64Image);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '프로필 사진이 변경되었어요! 📸',
+            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          ),
+          backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  void _removeProfileImage(BuildContext context, UserProvider userProvider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    userProvider.setProfileImage('');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '프로필 사진이 제거되었어요! 🗑️',
+          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+        ),
+        backgroundColor: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  Widget _buildProfileImage(String imagePath) {
+    try {
+      if (imagePath.startsWith('data:')) {
+        // Base64 이미지
+        final String base64Data = imagePath.split(',')[1];
+        return Image.memory(
+          base64Decode(base64Data),
+          width: 60,
+          height: 60,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 28,
+          ),
+        );
+      } else {
+        // Asset 이미지
+        return Image.asset(
+          imagePath,
+          width: 60,
+          height: 60,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 28,
+          ),
+        );
+      }
+    } catch (e) {
+      return Icon(
+        Icons.person,
+        color: Colors.white,
+        size: 28,
+      );
+    }
+  }
+
+  void _showSubscriptionDialog(BuildContext context, UserProvider userProvider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subscriptionProvider = Provider.of<SubscriptionProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.subscriptions,
+              color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+            ),
+            SizedBox(width: 12),
+            Text(
+              '구독 관리',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [LifewispColors.darkPink.withOpacity(0.2), LifewispColors.darkPurple.withOpacity(0.2)]
+                      : [LifewispColors.pink.withOpacity(0.1), LifewispColors.purple.withOpacity(0.1)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        subscriptionProvider.isPremium ? Icons.star : Icons.star_border,
+                        color: isDark ? LifewispColors.darkPink : LifewispColors.pink,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        subscriptionProvider.isPremium ? '프리미엄 구독 중' : '무료 플랜',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? LifewispColors.darkPink : LifewispColors.pink,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    subscriptionProvider.isPremium 
+                        ? '모든 프리미엄 기능을 이용할 수 있어요! ✨'
+                        : '프리미엄으로 업그레이드하여 더 많은 기능을 이용해보세요!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            if (subscriptionProvider.isPremium) ...[
+              ListTile(
+                leading: Icon(
+                  Icons.cancel,
+                  color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+                ),
+                title: Text(
+                  '구독 취소',
+                  style: TextStyle(
+                    color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCancelSubscriptionDialog(context, subscriptionProvider);
+                },
+              ),
+            ] else ...[
+              ListTile(
+                leading: Icon(
+                  Icons.upgrade,
+                  color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                ),
+                title: Text(
+                  '프리미엄으로 업그레이드',
+                  style: TextStyle(
+                    color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/subscription');
+                },
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '닫기',
+              style: TextStyle(
+                color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelSubscriptionDialog(BuildContext context, SubscriptionProvider subscriptionProvider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning,
+              color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+            ),
+            SizedBox(width: 12),
+            Text(
+              '구독 취소',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          '정말로 프리미엄 구독을 취소하시겠어요?\n\n구독을 취소하면 프리미엄 기능을 더 이상 이용할 수 없어요.',
+          style: TextStyle(
+            fontSize: 14,
+            color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '취소',
+              style: TextStyle(
+                color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // 실제 구현에서는 구독 취소 로직
+              subscriptionProvider.cancelSubscription();
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '구독이 취소되었어요! 😢',
+                    style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                  ),
+                  backgroundColor: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  margin: EdgeInsets.all(16),
+                ),
+              );
+            },
+            child: Text(
+              '구독 취소',
               style: TextStyle(
                 color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                 fontWeight: FontWeight.w600,
