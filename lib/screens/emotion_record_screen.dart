@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -10,7 +9,6 @@ import '../providers/user_provider.dart';
 import '../utils/emotion_utils.dart';
 import '../utils/theme.dart';
 import '../widgets/rabbit_emoticon.dart';
-import 'result_screen.dart';
 import '../widgets/common_app_bar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -32,6 +30,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
   List<String> selectedCategories = [];
   List<File> selectedImages = [];
   List<Uint8List> selectedImageBytes = []; // For web compatibility
+  static final Map<String, Uint8List> _webImageCache = {};
 
   // 애니메이션 컨트롤러들
   late AnimationController _fadeController;
@@ -948,17 +947,23 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
       ),
       child: ElevatedButton(
         onPressed: hasContent ? () {
-          // 이미지 파일 경로 리스트 생성 (웹에서는 임시 경로 사용)
-          final imagePaths = kIsWeb 
-              ? selectedImageBytes.asMap().entries.map((entry) => 'web_image_${entry.key}').toList()
-              : selectedImages.map((file) => file.path).toList();
+          // 이미지 파일 경로 리스트 생성 (수정된 부분)
+          List<String> imagePaths = [];
+
+          if (kIsWeb) {
+            // 웹에서는 EmotionProvider를 통해 이미지 저장
+            imagePaths = EmotionProvider.saveWebImages(selectedImageBytes);
+          } else {
+            // 모바일에서는 기존대로 파일 경로 사용
+            imagePaths = selectedImages.map((file) => file.path).toList();
+          }
 
           final record = EmotionRecord(
             date: selectedDate,
             emotion: selectedEmotion ?? 'happy',
             diary: _controller.text?.trim() ?? '',
-            categories: List.from(selectedCategories), // 선택된 카테고리들
-            imagePaths: imagePaths, // 이미지 파일 경로들
+            categories: List.from(selectedCategories),
+            imagePaths: imagePaths,
           );
 
           if (widget.isEdit) {
@@ -998,7 +1003,6 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
       ),
     );
   }
-
 
   void _showImagePicker() {
     showModalBottomSheet(
