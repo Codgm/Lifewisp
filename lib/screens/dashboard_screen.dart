@@ -115,7 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -342,10 +342,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       ],
                                     ),
                                     child: Container(
-                                      padding: EdgeInsets.all(12),
+                                      padding: EdgeInsets.all(6),
                                       child: RabbitEmoticon(
                                         emotion: _mapStringToRabbitEmotion(emoji),
-                                        size: 56,
+                                        size: 68,
                                       ),
                                     ),
                                   ),

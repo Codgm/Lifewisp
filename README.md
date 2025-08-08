@@ -352,15 +352,12 @@ flutter test
 
 ## 📞 연락처
 
-- **프로젝트 링크**: [https://github.com/your-username/lifewisp](https://github.com/your-username/lifewisp)
-- **이슈 리포트**: [https://github.com/your-username/lifewisp/issues](https://github.com/your-username/lifewisp/issues)
-
 ---
 
 <div align="center">
 
 **⭐ 이 프로젝트가 도움이 되었다면 스타를 눌러주세요!**
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by [서규민]
 
 </div>

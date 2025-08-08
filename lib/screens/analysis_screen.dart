@@ -15,15 +15,30 @@ class AnalysisScreen extends StatelessWidget {
 
   // 감정별 색상 매핑
   static const Map<String, Color> emotionColors = {
-    '행복': Color(0xFFFFB74D), // 밝은 오렌지
-    '슬픔': Color(0xFF64B5F6), // 밝은 파랑
-    '분노': Color(0xFFE57373), // 밝은 빨강
-    '평온': Color(0xFF81C784), // 밝은 초록
-    '불안': Color(0xFFBA68C8), // 밝은 보라
-    '흥분': Color(0xFFFF8A65), // 밝은 코랄
-    '사랑': Color(0xFFF06292), // 밝은 분홍
-    '피곤': Color(0xFF90A4AE), // 블루 그레이
-    '절망': Color(0xFF8D6E63), // 브라운
+    'happy': Color(0xFFFFB74D), // 밝은 오렌지
+    'sad': Color(0xFF64B5F6), // 밝은 파랑
+    'angry': Color(0xFFE57373), // 밝은 빨강
+    'calm': Color(0xFF81C784), // 밝은 초록
+    'anxious': Color(0xFFBA68C8), // 밝은 보라
+    'excited': Color(0xFFFF8A65), // 밝은 코랄
+    'love': Color(0xFFF06292), // 밝은 분홍
+    'tired': Color(0xFF90A4AE), // 블루 그레이
+    'despair': Color(0xFF8D6E63), // 브라운
+    'confidence': Color(0xFFFFD54F), // 밝은 노랑
+  };
+
+  // 감정명 한글 매핑
+  static const Map<String, String> emotionKoreanNames = {
+    'happy': '행복',
+    'sad': '슬픔',
+    'angry': '분노',
+    'calm': '평온',
+    'anxious': '불안',
+    'excited': '흥분',
+    'love': '사랑',
+    'tired': '피곤',
+    'despair': '절망',
+    'confidence': '자신감',
   };
 
   @override
@@ -39,6 +54,8 @@ class AnalysisScreen extends StatelessWidget {
       // 더미 데이터 생성
       emotionCounts = _generateDummyEmotionCounts();
       effectiveRecords = _generateDummyRecords();
+      print('분석 화면: 실제 데이터 없음, 더미 데이터 사용 (${effectiveRecords.length}개)');
+      print('더미 감정 분포: $emotionCounts');
     } else {
       // 실제 데이터 사용
       emotionCounts = {};
@@ -46,6 +63,13 @@ class AnalysisScreen extends StatelessWidget {
         emotionCounts[r.emotion] = (emotionCounts[r.emotion] ?? 0) + 1;
       }
       effectiveRecords = records;
+      print('분석 화면: 실제 데이터 사용 (${effectiveRecords.length}개)');
+      print('실제 감정 분포: $emotionCounts');
+      
+      // 실제 데이터의 감정별 상세 정보 출력
+      for (var record in records.take(5)) {
+        print('실제 기록: ${record.date} - ${record.emotion}');
+      }
     }
 
     return Scaffold(
@@ -83,25 +107,55 @@ class AnalysisScreen extends StatelessWidget {
   Map<String, int> _generateDummyEmotionCounts() {
     final random = Random();
     return {
-      '행복': 15 + random.nextInt(10),
-      '슬픔': 8 + random.nextInt(5),
-      '분노': 3 + random.nextInt(4),
-      '평온': 12 + random.nextInt(8),
-      '불안': 5 + random.nextInt(6),
-      '흥분': 7 + random.nextInt(5),
-      '사랑': 10 + random.nextInt(7),
+      'happy': 12 + random.nextInt(8),
+      'calm': 10 + random.nextInt(6),
+      'love': 8 + random.nextInt(5),
+      'excited': 6 + random.nextInt(4),
+      'confidence': 5 + random.nextInt(4),
+      'sad': 4 + random.nextInt(3),
+      'tired': 3 + random.nextInt(3),
+      'anxious': 2 + random.nextInt(2),
+      'angry': 1 + random.nextInt(2),
+      'despair': 1 + random.nextInt(1),
     };
   }
 
   // 더미 레코드 생성
   List _generateDummyRecords() {
-    final emotions = ['행복', '슬픔', '분노', '평온', '불안', '흥분', '사랑'];
+    final emotions = ['happy', 'sad', 'angry', 'calm', 'anxious', 'excited', 'love', 'tired', 'despair', 'confidence'];
     final random = Random();
     final now = DateTime.now();
 
-    return List.generate(60, (index) {
+    // 더 현실적인 감정 분포 (긍정적 감정이 조금 더 많음)
+    final emotionWeights = {
+      'happy': 0.25,
+      'calm': 0.20,
+      'love': 0.15,
+      'excited': 0.10,
+      'confidence': 0.10,
+      'sad': 0.08,
+      'tired': 0.06,
+      'anxious': 0.04,
+      'angry': 0.01,
+      'despair': 0.01,
+    };
+
+    return List.generate(45, (index) {
+      // 가중치 기반 감정 선택
+      double rand = random.nextDouble();
+      String selectedEmotion = 'happy'; // 기본값
+      
+      double cumulativeWeight = 0.0;
+      for (var entry in emotionWeights.entries) {
+        cumulativeWeight += entry.value;
+        if (rand <= cumulativeWeight) {
+          selectedEmotion = entry.key;
+          break;
+        }
+      }
+
       return {
-        'emotion': emotions[random.nextInt(emotions.length)],
+        'emotion': selectedEmotion,
         'date': now.subtract(Duration(days: random.nextInt(30))),
         'note': '더미 데이터입니다.',
       };
@@ -169,7 +223,7 @@ class AnalysisScreen extends StatelessWidget {
           ...sortedEmotions.map((entry) {
             final percent = entry.value / total;
             final emotionColor = emotionColors[entry.key] ?? (isDark ? LifewispColors.darkSubText : LifewispColors.gray);
-            
+
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               child: Row(
@@ -187,7 +241,7 @@ class AnalysisScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              entry.key,
+                              emotionKoreanNames[entry.key] ?? entry.key,
                               style: LifewispTextStyles.jua(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -235,9 +289,10 @@ class AnalysisScreen extends StatelessWidget {
     );
   }
 
-  // 2. 월간 감정 변화 트렌드 (개선된 버전)
+  // 2. 월간 감정 변화 트렌드 (실제 데이터 연동)
   Widget _buildMonthlyTrend(List records, BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dailyEmotionData = _getDailyEmotionData(records);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -287,17 +342,17 @@ class AnalysisScreen extends StatelessWidget {
                   verticalInterval: 5,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
-                      color: isDark 
-                        ? Colors.white.withOpacity(0.1) 
-                        : Colors.grey.withOpacity(0.2),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.2),
                       strokeWidth: 1,
                     );
                   },
                   getDrawingVerticalLine: (value) {
                     return FlLine(
-                      color: isDark 
-                        ? Colors.white.withOpacity(0.1) 
-                        : Colors.grey.withOpacity(0.2),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.2),
                       strokeWidth: 1,
                     );
                   },
@@ -359,94 +414,127 @@ class AnalysisScreen extends StatelessWidget {
                 maxX: 30,
                 minY: 0,
                 maxY: 10,
-                lineBarsData: [
-                  // 행복
-                  LineChartBarData(
-                    spots: _generateSmoothLineData(30, 3, 8),
-                    isCurved: true,
-                    curveSmoothness: 0.3,
-                    color: emotionColors['행복']!,
-                    barWidth: 3,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 3,
-                          color: emotionColors['행복']!,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: emotionColors['행복']!.withOpacity(0.1),
-                    ),
-                  ),
-                  // 슬픔
-                  LineChartBarData(
-                    spots: _generateSmoothLineData(30, 1, 5),
-                    isCurved: true,
-                    curveSmoothness: 0.3,
-                    color: emotionColors['슬픔']!,
-                    barWidth: 3,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 3,
-                          color: emotionColors['슬픔']!,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: emotionColors['슬픔']!.withOpacity(0.1),
-                    ),
-                  ),
-                  // 분노
-                  LineChartBarData(
-                    spots: _generateSmoothLineData(30, 0, 4),
-                    isCurved: true,
-                    curveSmoothness: 0.3,
-                    color: emotionColors['분노']!,
-                    barWidth: 3,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 3,
-                          color: emotionColors['분노']!,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: emotionColors['분노']!.withOpacity(0.1),
-                    ),
-                  ),
-                ],
+                lineBarsData: _generateEmotionLineData(dailyEmotionData),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          // 범례
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLegendItem('행복', emotionColors['행복']!),
-              const SizedBox(width: 20),
-              _buildLegendItem('슬픔', emotionColors['슬픔']!),
-              const SizedBox(width: 20),
-              _buildLegendItem('분노', emotionColors['분노']!),
-            ],
-          ),
+          // 범례 - 상위 감정들만 표시
+          _buildDynamicLegend(dailyEmotionData),
         ],
       ),
+    );
+  }
+
+  // 실제 데이터에서 일별 감정 데이터 추출
+  Map<int, Map<String, int>> _getDailyEmotionData(List records) {
+    final Map<int, Map<String, int>> dailyData = {};
+    final now = DateTime.now();
+
+    print('일별 감정 데이터 추출 시작: ${records.length}개 기록');
+
+    for (var record in records) {
+      DateTime recordDate;
+      String emotion;
+
+      if (record is Map) {
+        recordDate = record['date'] ?? now;
+        emotion = record['emotion'] ?? 'happy';
+        print('더미 데이터 처리: ${recordDate} - $emotion');
+      } else {
+        // EmotionRecord 객체인 경우
+        recordDate = record.date;
+        emotion = record.emotion;
+        print('실제 데이터 처리: ${recordDate} - $emotion');
+      }
+
+      final daysDiff = now.difference(recordDate).inDays;
+      if (daysDiff >= 0 && daysDiff <= 30) {
+        final day = 30 - daysDiff;
+        dailyData[day] ??= {};
+        dailyData[day]![emotion] = (dailyData[day]![emotion] ?? 0) + 1;
+      }
+    }
+
+    print('일별 감정 데이터 결과: $dailyData');
+    return dailyData;
+  }
+
+  // 감정별 라인 데이터 생성
+  List<LineChartBarData> _generateEmotionLineData(Map<int, Map<String, int>> dailyData) {
+    final allEmotions = <String>{};
+    for (var dayData in dailyData.values) {
+      allEmotions.addAll(dayData.keys);
+    }
+
+    // 상위 3개 감정만 표시
+    final emotionTotals = <String, int>{};
+    for (var emotion in allEmotions) {
+      emotionTotals[emotion] = dailyData.values
+          .fold(0, (sum, dayData) => sum + (dayData[emotion] ?? 0));
+    }
+
+    final topEmotions = emotionTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final selectedEmotions = topEmotions.take(3).map((e) => e.key).toList();
+
+    return selectedEmotions.map((emotion) {
+      final spots = <FlSpot>[];
+
+      for (int day = 0; day <= 30; day++) {
+        final count = dailyData[day]?[emotion] ?? 0;
+        spots.add(FlSpot(day.toDouble(), count.toDouble()));
+      }
+
+      final color = emotionColors[emotion] ?? Colors.grey;
+
+      return LineChartBarData(
+        spots: spots,
+        isCurved: true,
+        curveSmoothness: 0.3,
+        color: color,
+        barWidth: 3,
+        dotData: FlDotData(
+          show: true,
+          getDotPainter: (spot, percent, barData, index) {
+            return FlDotCirclePainter(
+              radius: 3,
+              color: color,
+              strokeWidth: 2,
+              strokeColor: Colors.white,
+            );
+          },
+        ),
+        belowBarData: BarAreaData(
+          show: true,
+          color: color.withOpacity(0.1),
+        ),
+      );
+    }).toList();
+  }
+
+  // 동적 범례 생성
+  Widget _buildDynamicLegend(Map<int, Map<String, int>> dailyData) {
+    final emotionTotals = <String, int>{};
+    for (var dayData in dailyData.values) {
+      for (var entry in dayData.entries) {
+        emotionTotals[entry.key] = (emotionTotals[entry.key] ?? 0) + entry.value;
+      }
+    }
+
+    final topEmotions = emotionTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final selectedEmotions = topEmotions.take(3).toList();
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 20,
+      children: selectedEmotions.map((entry) {
+        final color = emotionColors[entry.key] ?? Colors.grey;
+        return _buildLegendItem(entry.key, color);
+      }).toList(),
     );
   }
 
@@ -466,7 +554,7 @@ class AnalysisScreen extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          label,
+          emotionKoreanNames[label] ?? label,
           style: GoogleFonts.jua(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -474,25 +562,6 @@ class AnalysisScreen extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  // 더 부드러운 라인 데이터 생성
-  List<FlSpot> _generateSmoothLineData(int days, int minValue, int maxValue) {
-    final random = Random();
-    final spots = <FlSpot>[];
-    
-    double previousValue = (minValue + maxValue) / 2;
-    
-    for (int i = 0; i <= days; i++) {
-      // 이전 값을 기준으로 변화량을 제한하여 부드러운 곡선 생성
-      double change = (random.nextDouble() - 0.5) * 2; // -1 ~ 1
-      double newValue = (previousValue + change).clamp(minValue.toDouble(), maxValue.toDouble());
-      
-      spots.add(FlSpot(i.toDouble(), newValue));
-      previousValue = newValue;
-    }
-    
-    return spots;
   }
 
   Widget _buildLegendDot(Color color) {
@@ -504,9 +573,10 @@ class AnalysisScreen extends StatelessWidget {
     );
   }
 
-  // 3. 감정 히트맵 (달력 형태)
+  // 3. 감정 히트맵 (실제 데이터 연동)
   Widget _buildEmotionHeatmap(List records, BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dailyEmotions = _getDailyEmotionsForHeatmap(records);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -546,25 +616,67 @@ class AnalysisScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildDummyCalendarHeatmap(isDark, context),
+          _buildRealCalendarHeatmap(dailyEmotions, isDark, context),
         ],
       ),
     );
   }
 
-  // 더미 달력 히트맵
-  Widget _buildDummyCalendarHeatmap(bool isDark, BuildContext context) {
-    final days = List.generate(30, (i) => i + 1);
-    final emotions = ['행복', '슬픔', '분노', '평온', '불안'];
-    final random = Random();
+  // 실제 데이터에서 일별 감정 추출 (히트맵용)
+  Map<int, String> _getDailyEmotionsForHeatmap(List records) {
+    final Map<int, Map<String, int>> dailyEmotionCounts = {};
+    final now = DateTime.now();
 
+    print('히트맵 데이터 추출 시작: ${records.length}개 기록');
+
+    for (var record in records) {
+      DateTime recordDate;
+      String emotion;
+
+      if (record is Map) {
+        recordDate = record['date'] ?? now;
+        emotion = record['emotion'] ?? 'happy';
+      } else {
+        recordDate = record.date;
+        emotion = record.emotion;
+      }
+
+      final daysDiff = now.difference(recordDate).inDays;
+      if (daysDiff >= 0 && daysDiff <= 29) {
+        final day = daysDiff + 1; // 1부터 30까지
+        dailyEmotionCounts[day] ??= {};
+        dailyEmotionCounts[day]![emotion] = (dailyEmotionCounts[day]![emotion] ?? 0) + 1;
+      }
+    }
+
+    // 각 날짜의 주된 감정 결정
+    final Map<int, String> dominantEmotions = {};
+    for (var entry in dailyEmotionCounts.entries) {
+      final day = entry.key;
+      final emotionCounts = entry.value;
+
+      if (emotionCounts.isNotEmpty) {
+        final dominantEmotion = emotionCounts.entries
+            .reduce((a, b) => a.value > b.value ? a : b).key;
+        dominantEmotions[day] = dominantEmotion;
+      }
+    }
+
+    print('히트맵 데이터 결과: $dominantEmotions');
+    return dominantEmotions;
+  }
+
+  // 실제 데이터 기반 달력 히트맵
+  Widget _buildRealCalendarHeatmap(Map<int, String> dailyEmotions, bool isDark, BuildContext context) {
     return Wrap(
       spacing: 4,
       runSpacing: 4,
-      children: days.map((d) {
-        // 랜덤하게 감정이 있는 날과 없는 날 결정
-        final hasEmotion = random.nextBool();
-        if (!hasEmotion) {
+      children: List.generate(30, (index) {
+        final day = index + 1;
+        final emotion = dailyEmotions[day];
+
+        if (emotion == null) {
+          // 감정 기록이 없는 날
           return Container(
             width: 32,
             height: 32,
@@ -576,7 +688,7 @@ class AnalysisScreen extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                '$d',
+                '$day',
                 style: GoogleFonts.jua(
                   fontSize: 10,
                   color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
@@ -586,7 +698,6 @@ class AnalysisScreen extends StatelessWidget {
           );
         }
 
-        final emotion = emotions[random.nextInt(emotions.length)];
         final color = emotionColors[emotion] ?? Colors.grey;
 
         return Container(
@@ -599,7 +710,7 @@ class AnalysisScreen extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              '$d',
+              '$day',
               style: GoogleFonts.jua(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -608,7 +719,7 @@ class AnalysisScreen extends StatelessWidget {
             ),
           ),
         );
-      }).toList(),
+      }),
     );
   }
 
@@ -726,11 +837,11 @@ class AnalysisScreen extends StatelessWidget {
       if (topEmotion.value / totalRecords > 0.3) {
         outliers.add({
           'type': 'info',
-          'message': '${topEmotion.key} 감정이 전체의 ${((topEmotion.value / totalRecords) * 100).toStringAsFixed(1)}%를 차지해요. 이 감정이 최근 주된 감정 상태인 것 같아요.'
+          'message': '${emotionKoreanNames[topEmotion.key] ?? topEmotion.key} 감정이 전체의 ${((topEmotion.value / totalRecords) * 100).toStringAsFixed(1)}%를 차지해요. 이 감정이 최근 주된 감정 상태인 것 같아요.'
         });
       }
 
-      final negativeEmotions = ['슬픔', '분노', '불안', '절망'];
+      final negativeEmotions = ['sad', 'angry', 'anxious', 'despair'];
       final negativeCount = emotionCounts.entries
           .where((e) => negativeEmotions.contains(e.key))
           .fold(0, (sum, e) => sum + e.value);
@@ -743,7 +854,7 @@ class AnalysisScreen extends StatelessWidget {
       }
 
       // 긍정적인 패턴도 추가
-      final positiveEmotions = ['행복', '사랑', '평온', '흥분'];
+      final positiveEmotions = ['happy', 'love', 'calm', 'excited', 'confidence'];
       final positiveCount = emotionCounts.entries
           .where((e) => positiveEmotions.contains(e.key))
           .fold(0, (sum, e) => sum + e.value);
@@ -768,18 +879,6 @@ class AnalysisScreen extends StatelessWidget {
       '3월': {'행복': 18, '슬픔': 4, '분노': 1},
     };
   }
-
-  Map<String, Map<String, int>> _getDailyEmotionData(List records) {
-    final Map<String, Map<String, int>> dailyData = {};
-    for (int i = 1; i <= 31; i++) {
-      if (Random().nextBool()) {
-        dailyData['$i'] = {
-          emotionEmoji.keys.elementAt(Random().nextInt(emotionEmoji.length)): 1 + Random().nextInt(3)
-        };
-      }
-    }
-    return dailyData;
-  }
 }
 
 // 파이 차트 페인터
@@ -800,9 +899,9 @@ class _PieChartPainter extends CustomPainter {
 
     for (final entry in emotionCounts.entries) {
       final sweepAngle = (entry.value / total) * 2 * pi;
-      final emotionColor = AnalysisScreen.emotionColors[entry.key] ?? 
+      final emotionColor = AnalysisScreen.emotionColors[entry.key] ??
           (isDark ? LifewispColors.darkSubText : LifewispColors.gray);
-      
+
       final paint = Paint()
         ..color = emotionColor
         ..style = PaintingStyle.fill;
@@ -905,6 +1004,8 @@ RabbitEmotion _mapStringToRabbitEmotion(String key) {
     case 'despair':
     case '절망':
       return RabbitEmotion.despair;
+    case 'confidence':
+      return RabbitEmotion.confidence;
     default:
       return RabbitEmotion.happy;
   }

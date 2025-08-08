@@ -10,6 +10,7 @@ import '../models/emotion_record.dart';
 import '../utils/ai_analysis_utils.dart';
 import '../widgets/emotion_charts.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../screens/goal_setting_screen.dart'; // Added import for GoalSettingScreen
 
 class AdvancedAnalysisScreen extends StatefulWidget {
   const AdvancedAnalysisScreen({Key? key}) : super(key: key);
@@ -939,6 +940,17 @@ class _AdvancedAnalysisScreenState extends State<AdvancedAnalysisScreen>
               Text(
                 '목표 달성 현황',
                 style: isDark ? LifewispTextStyles.darkTitle : LifewispTextStyles.title,
+              ),
+              Spacer(),
+              IconButton(
+                icon: Icon(Icons.settings, color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent),
+                tooltip: '목표 관리',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => GoalSettingScreen()),
+                  );
+                },
               ),
             ],
           ),

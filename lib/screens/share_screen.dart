@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/emotion_record.dart';
 import '../utils/theme.dart';
 import '../widgets/common_app_bar.dart';
+import '../widgets/rabbit_emoticon.dart';
 
 class ShareScreen extends StatefulWidget {
-  const ShareScreen({Key? key}) : super(key: key);
+  final EmotionRecord? record; // 전달받은 감정 기록
+  const ShareScreen({Key? key, this.record}) : super(key: key);
 
   @override
   State<ShareScreen> createState() => _ShareScreenState();
@@ -84,24 +87,132 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
     ];
   }
 
+  // 감정에 따른 RabbitEmotion 매핑
+  RabbitEmotion _getEmotionType(String emotion) {
+    switch (emotion.toLowerCase()) {
+      case 'happy':
+        return RabbitEmotion.happy;
+      case 'sad':
+        return RabbitEmotion.sad;
+      case 'angry':
+        return RabbitEmotion.angry;
+      case 'excited':
+        return RabbitEmotion.excited;
+      case 'calm':
+        return RabbitEmotion.calm;
+      case 'anxious':
+        return RabbitEmotion.anxious;
+      case 'love':
+        return RabbitEmotion.love;
+      case 'tired':
+        return RabbitEmotion.tired;
+      case 'despair':
+        return RabbitEmotion.despair;
+      case 'confidence':
+        return RabbitEmotion.confidence;
+      default:
+        return RabbitEmotion.happy;
+    }
+  }
+
+  // 감정에서 키워드 생성
+  List<String> _generateKeywordsFromEmotion(String emotion, List<String>? categories) {
+    List<String> emotionKeywords = {
+      'happy': ['#행복', '#기쁨', '#즐거움'],
+      'sad': ['#슬픔', '#우울', '#눈물'],
+      'angry': ['#분노', '#화남', '#스트레스'],
+      'excited': ['#흥분', '#설렘', '#기대'],
+      'calm': ['#평온', '#안정', '#휴식'],
+      'anxious': ['#불안', '#걱정', '#긴장'],
+      'love': ['#사랑', '#애정', '#따뜻함'],
+      'tired': ['#피곤', '#휴식필요', '#지침'],
+      'despair': ['#절망', '#힘듦', '#위로'],
+      'confidence': ['#자신감', '#당당', '#성취'],
+    }[emotion.toLowerCase()] ?? ['#감정일기', '#성장'];
+
+    // 카테고리가 있으면 해시태그로 추가
+    if (categories != null && categories.isNotEmpty) {
+      emotionKeywords.addAll(categories.take(2).map((cat) => '#$cat'));
+    }
+
+    return emotionKeywords.take(3).toList();
+  }
+
+  // 감정에서 메시지 생성
+  String _generateMessageFromRecord(EmotionRecord record) {
+    Map<String, List<String>> emotionMessages = {
+      'happy': [
+        '오늘은 특별히 행복한 하루였어요 ✨',
+        '웃음이 끊이지 않는 하루',
+        '행복한 순간들을 간직해요',
+      ],
+      'sad': [
+        '슬픈 감정도 소중한 나의 일부',
+        '눈물 뒤에는 성장이 있어요',
+        '괜찮아요, 내일은 더 나아질 거예요',
+      ],
+      'angry': [
+        '분노도 나를 표현하는 방법',
+        '감정을 인정하고 받아들여요',
+        '화가 나는 것도 괜찮아요',
+      ],
+      'excited': [
+        '설레는 마음이 가득한 하루',
+        '새로운 시작에 대한 기대감',
+        '흥미진진한 하루를 보냈어요',
+      ],
+      'calm': [
+        '고요한 마음이 주는 평화',
+        '내 마음속 고요함을 찾았어요',
+        '평온함 속에서 나를 돌아봐요',
+      ],
+      'anxious': [
+        '불안한 마음도 이해해요',
+        '걱정이 많았던 하루였지만',
+        '불안함도 나의 소중한 감정',
+      ],
+      'love': [
+        '사랑으로 가득한 마음',
+        '따뜻한 사랑을 느꼈어요',
+        '사랑하고 사랑받는 하루',
+      ],
+      'tired': [
+        '피곤하지만 나를 아껴요',
+        '휴식이 필요한 시간이에요',
+        '충분한 쉼을 가져요',
+      ],
+    };
+
+    List<String> messages = emotionMessages[record.emotion.toLowerCase()] ??
+        ['내 감정을 소중히 여겨요', '오늘도 나를 이해해요'];
+
+    return messages.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themes = getThemes(isDark);
 
-    // 더미 데이터
-    final mainEmotion = '😊';
-    final summary = '내 감정을 인정하는 건\n나를 존중하는 일이다.';
-    final keywords = ['#자존감', '#성장', '#감정일기'];
+    // 실제 데이터 또는 더미 데이터 사용
+    final EmotionRecord displayRecord = widget.record ?? EmotionRecord(
+      date: DateTime.now(),
+      emotion: 'happy',
+      diary: '내 감정을 인정하는 건\n나를 존중하는 일이다.',
+      categories: ['자존감', '성장'],
+    );
+
     final selectedThemeData = themes[selectedTheme];
+    final keywords = _generateKeywordsFromEmotion(displayRecord.emotion, displayRecord.categories);
+    final summary = _generateMessageFromRecord(displayRecord);
 
     return Scaffold(
       backgroundColor: isDark
           ? LifewispColors.darkBlack
           : Theme.of(context).scaffoldBackgroundColor,
       appBar: CommonAppBar(
-          title: '공유',
-          showBackButton: true,
+        title: '공유',
+        showBackButton: true,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -113,6 +224,48 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // 실제 데이터 표시 알림
+                if (widget.record != null)
+                  Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: (isDark
+                          ? LifewispColors.darkPrimary
+                          : LifewispColors.primary).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: (isDark
+                            ? LifewispColors.darkPrimary
+                            : LifewispColors.primary).withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          color: isDark
+                              ? LifewispColors.darkPrimary
+                              : LifewispColors.primary,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${displayRecord.date.month}월 ${displayRecord.date.day}일의 감정 기록을 공유카드로 만들었어요!',
+                            style: GoogleFonts.jua(
+                              fontSize: 13,
+                              color: isDark
+                                  ? LifewispColors.darkPrimary
+                                  : LifewispColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // 인스타그램 스타일 미리보기 카드
                 Center(
                   child: AnimatedBuilder(
@@ -225,10 +378,11 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                                         ],
                                       ),
 
-                                      // 이모지 컨테이너
+                                      // RabbitEmoticon 사용 - 개선된 버전
                                       Container(
                                         width: 100,
                                         height: 100,
+                                        padding: EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.95),
                                           borderRadius: BorderRadius.circular(50),
@@ -249,11 +403,9 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                                             width: 2,
                                           ),
                                         ),
-                                        child: Center(
-                                          child: Text(
-                                            mainEmotion,
-                                            style: const TextStyle(fontSize: 50),
-                                          ),
+                                        child: RabbitEmoticon(
+                                          emotion: _getEmotionType(displayRecord.emotion),
+                                          size: 64,
                                         ),
                                       ),
 
@@ -332,18 +484,31 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                                         )).toList(),
                                       ),
 
-                                      // 하단 장식
+                                      // 날짜 표시
                                       Container(
-                                        height: 3,
-                                        width: 50,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.white.withOpacity(0.8),
-                                              Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${displayRecord.date.year}.${displayRecord.date.month.toString().padLeft(2, '0')}.${displayRecord.date.day.toString().padLeft(2, '0')}',
+                                          style: GoogleFonts.jua(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white.withOpacity(0.9),
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                offset: const Offset(0, 1),
+                                                blurRadius: 2,
+                                              ),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.circular(2),
                                         ),
                                       ),
                                     ],

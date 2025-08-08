@@ -29,26 +29,31 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
       date: DateTime.now().subtract(Duration(days: 1)),
       emotion: 'happy',
       diary: '오늘은 친구들과 즐거운 시간을 보냈어요! 맛있는 음식도 먹고 웃음도 많이 나누었답니다. 이런 순간들이 정말 소중해요.',
+      categories: ['친구만남', '맛있는음식', '소통'],
     ),
     EmotionRecord(
       date: DateTime.now().subtract(Duration(days: 2)),
       emotion: 'calm',
       diary: '공원을 산책하며 평온한 하루를 보냈습니다. 나무들 사이로 들어오는 햇살이 참 아름다웠어요.',
+      categories: ['휴식', '자연'],
     ),
     EmotionRecord(
       date: DateTime.now().subtract(Duration(days: 3)),
       emotion: 'excited',
       diary: '새로운 프로젝트를 시작하게 되어서 정말 설레요! 앞으로 어떤 일들이 펼쳐질지 기대됩니다.',
+      categories: ['새로운도전', '목표달성'],
     ),
     EmotionRecord(
       date: DateTime.now().subtract(Duration(days: 4)),
       emotion: 'love',
       diary: '가족들과 함께하는 저녁 시간이 너무 따뜻해요. 사랑하는 사람들과 함께 있을 때가 가장 행복한 것 같아요.',
+      categories: ['가족시간', '사랑'],
     ),
     EmotionRecord(
       date: DateTime.now().subtract(Duration(days: 5)),
       emotion: 'tired',
       diary: '오늘은 조금 피곤했지만, 그래도 하루를 무사히 마칠 수 있어서 다행이에요. 내일은 더 활기찬 하루가 되길!',
+      categories: ['업무', '휴식필요'],
     ),
   ];
 
@@ -120,8 +125,12 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final records = context.watch<EmotionProvider>().records;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final records = context
+        .watch<EmotionProvider>()
+        .records;
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
 
     // 실제 데이터가 없으면 더미 데이터 사용
     final displayRecords = records.isEmpty ? _dummyRecords : records;
@@ -149,11 +158,13 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                   margin: EdgeInsets.all(20),
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: (isDark ? LifewispColors.darkCardBg : LifewispColors.diaryCardBg).withOpacity(0.95),
+                    color: (isDark ? LifewispColors.darkCardBg : LifewispColors
+                        .diaryCardBg).withOpacity(0.95),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: (isDark ? Colors.black : LifewispColors.cardShadow).withOpacity(isDark ? 0.3 : 0.08),
+                        color: (isDark ? Colors.black : LifewispColors
+                            .cardShadow).withOpacity(isDark ? 0.3 : 0.08),
                         blurRadius: 20,
                         offset: Offset(0, 10),
                       ),
@@ -168,11 +179,15 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                               padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 gradient: isDark
-                                    ? LinearGradient(colors: [LifewispColors.darkPrimary, LifewispColors.darkPurple])
+                                    ? LinearGradient(colors: [
+                                  LifewispColors.darkPrimary,
+                                  LifewispColors.darkPurple
+                                ])
                                     : LifewispGradients.statCard,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Icon(Icons.favorite, color: Colors.white, size: 20),
+                              child: Icon(Icons.favorite, color: Colors.white,
+                                  size: 20),
                             ),
                             SizedBox(height: 8),
                             Text(
@@ -180,14 +195,18 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                               style: GoogleFonts.jua(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: isDark ? LifewispColors.darkMainText : LifewispColors.statCardText,
+                                color: isDark
+                                    ? LifewispColors.darkMainText
+                                    : LifewispColors.statCardText,
                               ),
                             ),
                             Text(
                               '총 기록',
                               style: GoogleFonts.jua(
                                 fontSize: 12,
-                                color: isDark ? LifewispColors.darkSubText : LifewispColors.statCardSubText,
+                                color: isDark
+                                    ? LifewispColors.darkSubText
+                                    : LifewispColors.statCardSubText,
                               ),
                             ),
                           ],
@@ -196,7 +215,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                       Container(
                         width: 1,
                         height: 40,
-                        color: isDark ? LifewispColors.darkLightGray : Colors.grey[200],
+                        color: isDark ? LifewispColors.darkLightGray : Colors
+                            .grey[200],
                       ),
                       Expanded(
                         child: Column(
@@ -206,12 +226,16 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: isDark
-                                      ? [LifewispColors.darkPurple, LifewispColors.darkPurpleDark]
+                                      ? [
+                                    LifewispColors.darkPurple,
+                                    LifewispColors.darkPurpleDark
+                                  ]
                                       : [Color(0xFF9B59B6), Color(0xFFDDA0DD)],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Icon(Icons.timeline, color: Colors.white, size: 20),
+                              child: Icon(Icons.timeline, color: Colors.white,
+                                  size: 20),
                             ),
                             SizedBox(height: 8),
                             Text(
@@ -219,14 +243,18 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                               style: GoogleFonts.jua(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: isDark ? LifewispColors.darkMainText : Color(0xFF2D3748),
+                                color: isDark
+                                    ? LifewispColors.darkMainText
+                                    : Color(0xFF2D3748),
                               ),
                             ),
                             Text(
                               '연속 기록',
                               style: GoogleFonts.jua(
                                 fontSize: 12,
-                                color: isDark ? LifewispColors.darkSubText : Color(0xFF718096),
+                                color: isDark
+                                    ? LifewispColors.darkSubText
+                                    : Color(0xFF718096),
                               ),
                             ),
                           ],
@@ -240,11 +268,13 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   decoration: BoxDecoration(
-                    color: (isDark ? LifewispColors.darkCardBg : LifewispColors.diaryCardBg).withOpacity(0.9),
+                    color: (isDark ? LifewispColors.darkCardBg : LifewispColors
+                        .diaryCardBg).withOpacity(0.9),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: (isDark ? Colors.black : LifewispColors.cardShadow).withOpacity(isDark ? 0.2 : 0.05),
+                        color: (isDark ? Colors.black : LifewispColors
+                            .cardShadow).withOpacity(isDark ? 0.2 : 0.05),
                         blurRadius: 15,
                         offset: Offset(0, 5),
                       ),
@@ -254,19 +284,24 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                     decoration: InputDecoration(
                       hintText: '감정 기록 검색하기...',
                       hintStyle: GoogleFonts.jua(
-                        color: isDark ? LifewispColors.darkSubText : Color(0xFF9CA3AF),
+                        color: isDark ? LifewispColors.darkSubText : Color(
+                            0xFF9CA3AF),
                         fontSize: 16,
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
-                        color: isDark ? LifewispColors.darkPrimary : Color(0xFF9B59B6),
+                        color: isDark ? LifewispColors.darkPrimary : Color(
+                            0xFF9B59B6),
                         size: 22,
                       ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
                     ),
                     style: GoogleFonts.jua(
-                      color: isDark ? LifewispColors.darkMainText : LifewispColors.darkGray,
+                      color: isDark
+                          ? LifewispColors.darkMainText
+                          : LifewispColors.darkGray,
                       fontSize: 16,
                     ),
                     onChanged: (v) => setState(() => searchText = v),
@@ -292,13 +327,20 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                               fontWeight: FontWeight.w500,
                               color: filterEmotion == null
                                   ? LifewispColors.white
-                                  : (isDark ? LifewispColors.darkMainText : LifewispColors.primary),
+                                  : (isDark
+                                  ? LifewispColors.darkMainText
+                                  : LifewispColors.primary),
                             ),
                           ),
                           selected: filterEmotion == null,
-                          selectedColor: isDark ? LifewispColors.darkPrimary : LifewispColors.primary,
-                          backgroundColor: (isDark ? LifewispColors.darkCardBg : Colors.white).withOpacity(0.9),
-                          onSelected: (_) => setState(() => filterEmotion = null),
+                          selectedColor: isDark
+                              ? LifewispColors.darkPrimary
+                              : LifewispColors.primary,
+                          backgroundColor: (isDark
+                              ? LifewispColors.darkCardBg
+                              : Colors.white).withOpacity(0.9),
+                          onSelected: (_) =>
+                              setState(() => filterEmotion = null),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -325,8 +367,11 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                             ),
                             selected: filterEmotion == emotion,
                             selectedColor: data['color'],
-                            backgroundColor: (isDark ? LifewispColors.darkCardBg : Colors.white).withOpacity(0.9),
-                            onSelected: (_) => setState(() => filterEmotion = emotion),
+                            backgroundColor: (isDark
+                                ? LifewispColors.darkCardBg
+                                : Colors.white).withOpacity(0.9),
+                            onSelected: (_) =>
+                                setState(() => filterEmotion = emotion),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -345,10 +390,14 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                     margin: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: (isDark ? LifewispColors.darkPurple : LifewispColors.purple).withOpacity(0.1),
+                      color: (isDark
+                          ? LifewispColors.darkPurple
+                          : LifewispColors.purple).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: (isDark ? LifewispColors.darkPurple : LifewispColors.purple).withOpacity(0.3),
+                        color: (isDark
+                            ? LifewispColors.darkPurple
+                            : LifewispColors.purple).withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -356,7 +405,9 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                       children: [
                         Icon(
                           Icons.info_outline,
-                          color: isDark ? LifewispColors.darkPurple : LifewispColors.purple,
+                          color: isDark
+                              ? LifewispColors.darkPurple
+                              : LifewispColors.purple,
                           size: 20,
                         ),
                         SizedBox(width: 8),
@@ -365,7 +416,9 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                             '아직 기록된 감정이 없어서 샘플 데이터를 보여드려요!',
                             style: GoogleFonts.jua(
                               fontSize: 13,
-                              color: isDark ? LifewispColors.darkPurple : LifewispColors.purple,
+                              color: isDark
+                                  ? LifewispColors.darkPurple
+                                  : LifewispColors.purple,
                             ),
                           ),
                         ),
@@ -380,7 +433,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                       : Container(
                     margin: EdgeInsets.only(top: 8),
                     child: ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
                         return _buildDiaryCard(filtered[index], index);
@@ -393,80 +447,9 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
           ),
         ),
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [LifewispColors.darkPrimary, LifewispColors.darkPurple]
-                : [Color(0xFFFF6B9D), Color(0xFF9B59B6)],
-          ),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: (isDark ? LifewispColors.darkPrimary : Color(0xFFFF6B9D)).withOpacity(0.4),
-              blurRadius: 15,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (BuildContext context) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? LifewispColors.darkCardBg : Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                  ),
-                  padding: EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Icon(
-                            Icons.download_rounded,
-                            color: isDark ? LifewispColors.darkPrimary : LifewispColors.filterChipSelected
-                        ),
-                        title: Text(
-                          '일기 내보내기',
-                          style: GoogleFonts.jua(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? LifewispColors.darkMainText : LifewispColors.filterChipSelected,
-                          ),
-                        ),
-                        onTap: () {
-                          // TODO: Implement diary export logic
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: Icon(Icons.more_vert_rounded, color: Colors.white),
-          label: Text(
-            '감정 기록',
-            style: GoogleFonts.jua(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
     );
   }
+
 
   Widget _buildDiaryCard(EmotionRecord diary, int index) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -519,31 +502,34 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
           ),
           child: Row(
             children: [
-              // 감정 아바타
+              // 감정 아바타 - 크기와 패딩 최적화
               Container(
-                width: 60,
-                height: 60,
+                width: 70,  // 크기 증가
+                height: 70, // 크기 증가
+                padding: EdgeInsets.all(8), // 내부 패딩 추가
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      color.withOpacity(0.8),
-                      color.withOpacity(0.6),
+                      color.withOpacity(0.15),
+                      color.withOpacity(0.08),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: color.withOpacity(0.3),
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.3),
+                      color: color.withOpacity(0.2),
                       blurRadius: 8,
                       offset: Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Center(
-                  child: RabbitEmoticon(
-                    emotion: _mapStringToRabbitEmotion(diary.emotion),
-                    size: 24,
-                  ),
+                child: RabbitEmoticon(
+                  emotion: _mapStringToRabbitEmotion(diary.emotion),
+                  size: 40, // RabbitEmoticon 크기 조정
                 ),
               ),
               SizedBox(width: 16),
@@ -565,6 +551,35 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                       ),
                     ),
                     SizedBox(height: 8),
+
+                    // 카테고리 태그들 표시
+                    if (diary.categories != null && diary.categories!.isNotEmpty) ...[
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: diary.categories!.take(2).map((category) => Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: color.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            category,
+                            style: GoogleFonts.jua(
+                              fontSize: 11,
+                              color: color,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        )).toList(),
+                      ),
+                      SizedBox(height: 8),
+                    ],
+
                     Row(
                       children: [
                         Icon(
@@ -580,6 +595,24 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                             color: isDark ? LifewispColors.darkSubText : Color(0xFF9CA3AF),
                           ),
                         ),
+
+                        // 이미지가 있으면 표시
+                        if (diary.imagePaths != null && diary.imagePaths!.isNotEmpty) ...[
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.photo_camera_rounded,
+                            size: 14,
+                            color: color,
+                          ),
+                          Text(
+                            ' ${diary.imagePaths!.length}',
+                            style: GoogleFonts.jua(
+                              fontSize: 12,
+                              color: color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],
