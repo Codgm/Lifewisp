@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/emotion_record.dart';
+import '../providers/user_provider.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/season_animation.dart';
 import '../utils/season_utils.dart';
 import '../widgets/rabbit_emoticon.dart';
@@ -20,12 +22,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // 현재 레벨과 감정 상태
   RabbitEmotion currentEmotion = RabbitEmotion.happy;
 
-  String _userName = '감정 탐험가';
+
   String? _profileImageUrl;
 
   @override
   Widget build(BuildContext context) {
     final emotionProvider = Provider.of<EmotionProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
     final records = emotionProvider.records ?? []; // null 체크 추가
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -108,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 20),
 
                         // 수정된 프로필 섹션 - SeasonProfileWidget 대신 직접 구현
-                        _buildProfileSection(currentSeason),
+                        _buildProfileSection(currentSeason, userProvider),
 
                         const SizedBox(height: 12),
 
@@ -157,6 +160,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 24),
                         _buildGrowthBadgesSection(),
                         const SizedBox(height: 20),
+                        
+                        // 로그아웃 버튼
+                        _buildLogoutButton(),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -170,15 +177,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // 새로운 프로필 섹션 - 닉네임 표시 포함
-  Widget _buildProfileSection(Season currentSeason) {
+  Widget _buildProfileSection(Season currentSeason, UserProvider userProvider) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       children: [
         // 프로필 이미지/캐릭터
-        GestureDetector(
-          onTap: _showProfileEditDialog,
-          child: Container(
+        Container(
             width: 120,
             height: 120,
             decoration: BoxDecoration(
@@ -194,42 +199,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ? ClipOval(
                 child: Image.network(
                   _profileImageUrl!,
-                  width: 100,
-                  height: 100,
+                  width: 120,
+                  height: 120,
                   fit: BoxFit.cover,
                 ),
               )
                   : RabbitEmoticon(
                 emotion: RabbitEmotion.happy,
-                size: 80,
+                size: 100,
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
 
+        const SizedBox(height: 16),
         // 닉네임 표시
-        GestureDetector(
-          onTap: _showProfileEditDialog,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _userName,
-                style: GoogleFonts.jua(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: LifewispColorsExt.mainTextFor(context),
-                ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              userProvider.userNickname ?? '감정 탐험가',
+              style: GoogleFonts.jua(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: LifewispColorsExt.mainTextFor(context),
               ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.edit,
-                size: 16,
-                color: LifewispColorsExt.subTextFor(context),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -240,62 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return SeasonUtils.getSeasonColors(season, isDark);
   }
 
-  void _showProfileEditDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String tempName = _userName;
-        return AlertDialog(
-          title: Text(
-            '프로필 편집',
-            style: GoogleFonts.jua(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: '닉네임',
-                  border: OutlineInputBorder(),
-                ),
-                controller: TextEditingController(text: tempName),
-                onChanged: (value) {
-                  tempName = value;
-                },
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // 프로필 이미지 선택 로직
-                  // 실제 구현에서는 image_picker 등을 사용
-                },
-                icon: const Icon(Icons.photo_camera),
-                label: const Text('프로필 사진 변경'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _userName = tempName.isEmpty ? '감정 탐험가' : tempName;
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('저장'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
 
 
@@ -723,6 +663,127 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return RabbitEmotion.anxious;
       default:
         return RabbitEmotion.happy;
+    }
+  }
+
+  // 로그아웃 버튼
+  Widget _buildLogoutButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        color: isDark ? LifewispColors.darkCardBg : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (isDark ? LifewispColors.darkRed : Colors.red).withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextButton(
+        onPressed: () => _showLogoutDialog(),
+        style: TextButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.logout,
+              color: isDark ? LifewispColors.darkRed : Colors.red,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '로그아웃',
+              style: GoogleFonts.jua(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDark ? LifewispColors.darkRed : Colors.red,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 로그아웃 확인 다이얼로그
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.red),
+              const SizedBox(width: 8),
+              Text('로그아웃'),
+            ],
+          ),
+          content: Text('정말 로그아웃하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _handleLogout();
+              },
+              child: Text(
+                '로그아웃',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // 로그아웃 처리
+  Future<void> _handleLogout() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await authProvider.signOut();
+      
+      // 로그아웃 성공 시 로그인 화면으로 이동
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('로그아웃되었습니다.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('로그아웃 중 오류가 발생했습니다: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
   }
 }
