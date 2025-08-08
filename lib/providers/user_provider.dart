@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class UserProvider extends ChangeNotifier {
   bool _isLoggedIn = false;
@@ -21,6 +23,7 @@ class UserProvider extends ChangeNotifier {
   String? get userEmail => _userEmail;
   String? get userNickname => _userNickname;
   String? get profileImagePath => _profileImagePath;
+  String? get profileImageUrl => _profileImagePath;
   ThemeMode get themeMode => _themeMode;
   
   // 앱 설정 getters
@@ -35,6 +38,22 @@ class UserProvider extends ChangeNotifier {
   // 초기화 시 설정 로드
   Future<void> initialize() async {
     await _loadSettings();
+    await _checkLoginStatus();
+  }
+
+  // 로그인 상태 확인
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('userEmail');
+    final savedPassword = prefs.getString('userPassword');
+    
+    if (savedEmail != null && savedPassword != null) {
+      // 자동 로그인 (실제 구현시 토큰 검증 필요)
+      _isLoggedIn = true;
+      _userEmail = savedEmail;
+      _userNickname = prefs.getString('userNickname') ?? savedEmail.split('@').first;
+      notifyListeners();
+    }
   }
 
   // 설정 저장
@@ -91,43 +110,140 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 더미 로그인
-  Future<bool> login(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _isLoggedIn = true;
-    _userEmail = email;
-    if (_userNickname == null) {
-      _userNickname = email.split('@').first;
-    }
-    await _saveSettings();
-    notifyListeners();
-    return true;
+  // 이메일 유효성 검사
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
-  // 더미 회원가입
-  Future<bool> signup(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    _isLoggedIn = true;
-    _userEmail = email;
-    if (_userNickname == null) {
-      _userNickname = email.split('@').first;
+  // 비밀번호 유효성 검사
+  bool _isValidPassword(String password) {
+    return password.length >= 6;
+  }
+
+  // 비밀번호 해시화 (실제 구현시 더 안전한 방법 사용)
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  // 로그인
+  Future<bool> login(String email, String password) async {
+    // 입력 유효성 검사
+    if (!_isValidEmail(email)) {
+      throw Exception('올바른 이메일 형식을 입력해주세요.');
     }
-    await _saveSettings();
-    notifyListeners();
-    return true;
+    
+    if (!_isValidPassword(password)) {
+      throw Exception('비밀번호는 최소 6자 이상이어야 합니다.');
+    }
+
+    await Future.delayed(const Duration(seconds: 1)); // 실제 API 호출 시뮬레이션
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedPassword = prefs.getString('userPassword_$email');
+      
+      if (savedPassword != null && savedPassword == _hashPassword(password)) {
+        // 로그인 성공
+        _isLoggedIn = true;
+        _userEmail = email;
+        _userNickname = prefs.getString('userNickname_$email') ?? email.split('@').first;
+        
+        // 로그인 정보 저장
+        await prefs.setString('userEmail', email);
+        await prefs.setString('userPassword', _hashPassword(password));
+        await prefs.setString('userNickname_$email', _userNickname!);
+        
+        await _saveSettings();
+        notifyListeners();
+        return true;
+      } else {
+        throw Exception('이메일 또는 비밀번호가 올바르지 않습니다.');
+      }
+    } catch (e) {
+      throw Exception('로그인에 실패했습니다: ${e.toString()}');
+    }
+  }
+
+  // 회원가입
+  Future<bool> signup(String email, String password, String nickname) async {
+    // 입력 유효성 검사
+    if (!_isValidEmail(email)) {
+      throw Exception('올바른 이메일 형식을 입력해주세요.');
+    }
+    
+    if (!_isValidPassword(password)) {
+      throw Exception('비밀번호는 최소 6자 이상이어야 합니다.');
+    }
+    
+    if (nickname.trim().isEmpty) {
+      throw Exception('닉네임을 입력해주세요.');
+    }
+
+    await Future.delayed(const Duration(seconds: 1)); // 실제 API 호출 시뮬레이션
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final existingUser = prefs.getString('userPassword_$email');
+      
+      if (existingUser != null) {
+        throw Exception('이미 가입된 이메일입니다.');
+      }
+      
+      // 회원가입 성공
+      _isLoggedIn = true;
+      _userEmail = email;
+      _userNickname = nickname;
+      
+      // 사용자 정보 저장
+      await prefs.setString('userEmail', email);
+      await prefs.setString('userPassword', _hashPassword(password));
+      await prefs.setString('userNickname_$email', nickname);
+      await prefs.setString('userPassword_$email', _hashPassword(password));
+      
+      await _saveSettings();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      throw Exception('회원가입에 실패했습니다: ${e.toString()}');
+    }
   }
 
   // 로그아웃
-  void logout() {
+  Future<void> logout() async {
     _isLoggedIn = false;
     _userEmail = null;
+    _userNickname = null;
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userEmail');
+    await prefs.remove('userPassword');
+    
     notifyListeners();
   }
 
-  // 비밀번호 찾기(더미)
+  // 비밀번호 찾기
   Future<bool> resetPassword(String email) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return true;
+    if (!_isValidEmail(email)) {
+      throw Exception('올바른 이메일 형식을 입력해주세요.');
+    }
+
+    await Future.delayed(const Duration(seconds: 1)); // 실제 API 호출 시뮬레이션
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final existingUser = prefs.getString('userPassword_$email');
+      
+      if (existingUser == null) {
+        throw Exception('가입되지 않은 이메일입니다.');
+      }
+      
+      // 실제 구현시 이메일 발송 로직 추가
+      return true;
+    } catch (e) {
+      throw Exception('비밀번호 재설정에 실패했습니다: ${e.toString()}');
+    }
   }
 
   // 테마 설정
@@ -140,6 +256,10 @@ class UserProvider extends ChangeNotifier {
   // 닉네임 설정
   Future<void> setUserNickname(String nickname) async {
     _userNickname = nickname;
+    if (_userEmail != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userNickname_$_userEmail', nickname);
+    }
     await _saveSettings();
     notifyListeners();
   }
