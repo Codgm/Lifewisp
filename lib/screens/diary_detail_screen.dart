@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -316,6 +317,241 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
     }
   }
 
+  List<Widget> _buildResponsiveActions(BuildContext context, bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
+    // 기본 액션 버튼들
+    final allActions = [
+      _buildActionButton(
+        context,
+        icon: Icons.share_rounded,
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF4FACFE),
+            Color(0xFF00F2FE),
+          ],
+        ),
+        onPressed: () {
+          Navigator.pushNamed(context, '/share');
+        },
+      ),
+      _buildActionButton(
+        context,
+        icon: Icons.edit_rounded,
+        backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+        iconColor: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+        onPressed: () async {
+          final updated = await Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, _) => EmotionRecordScreen(
+                initialDate: widget.record.date,
+                initialEmotion: widget.record.emotion,
+                initialDiary: widget.record.diary,
+                isEdit: true,
+              ),
+              transitionsBuilder: (context, animation, _, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeInOutCubic,
+                  )),
+                  child: child,
+                );
+              },
+            ),
+          );
+          if (updated != null && updated is EmotionRecord) {
+            context.read<EmotionProvider>().editRecord(widget.record, updated);
+          }
+        },
+      ),
+      _buildActionButton(
+        context,
+        icon: Icons.delete_outline_rounded,
+        gradient: LinearGradient(
+          colors: [
+            LifewispColors.pink,
+            LifewispColors.pinkAccent,
+          ],
+        ),
+        onPressed: () => _showDeleteDialog(context),
+      ),
+    ];
+
+    // 작은 화면에서는 더보기 메뉴 사용
+    if (isSmallScreen) {
+      return [
+        allActions[0], // 공유 버튼은 항상 표시
+        PopupMenuButton<String>(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDark ? LifewispColors.darkCardBg : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.more_vert_rounded,
+              color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+              size: 18,
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8,
+          shadowColor: Colors.black.withOpacity(0.2),
+          color: isDark ? LifewispColors.darkCardBg : Colors.white,
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.edit_rounded,
+                    size: 18,
+                    color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '수정',
+                    style: TextStyle(
+                      color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete_outline_rounded,
+                    size: 18,
+                    color: LifewispColors.pink,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '삭제',
+                    style: TextStyle(
+                      color: LifewispColors.pink,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) async {
+            switch (value) {
+              case 'edit':
+                final updated = await Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, _) => EmotionRecordScreen(
+                      initialDate: widget.record.date,
+                      initialEmotion: widget.record.emotion,
+                      initialDiary: widget.record.diary,
+                      isEdit: true,
+                    ),
+                    transitionsBuilder: (context, animation, _, child) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(1.0, 0.0),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeInOutCubic,
+                        )),
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+                if (updated != null && updated is EmotionRecord) {
+                  context.read<EmotionProvider>().editRecord(widget.record, updated);
+                }
+                break;
+              case 'delete':
+                _showDeleteDialog(context);
+                break;
+            }
+          },
+        ),
+        const SizedBox(width: 8),
+      ];
+    }
+
+    // 일반 화면에서는 모든 버튼 표시
+    return [
+      ...allActions,
+      const SizedBox(width: 16),
+    ];
+  }
+
+  Widget _buildActionButton(BuildContext context, {
+    required IconData icon,
+    Gradient? gradient,
+    Color? backgroundColor,
+    Color? iconColor,
+    required VoidCallback onPressed,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // 반응형 크기 설정
+    final buttonSize = screenWidth < 360 ? 36.0 : (screenWidth < 600 ? 40.0 : 44.0);
+    final iconSize = screenWidth < 360 ? 16.0 : (screenWidth < 600 ? 18.0 : 20.0);
+
+    return Container(
+      width: buttonSize,
+      height: buttonSize,
+      margin: EdgeInsets.only(right: screenWidth < 360 ? 4.0 : 8.0),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(screenWidth < 360 ? 12.0 : 16.0),
+        boxShadow: [
+          BoxShadow(
+            color: (gradient != null
+                ? gradient.colors.first
+                : (backgroundColor ?? Colors.grey)).withOpacity(0.3),
+            blurRadius: screenWidth < 360 ? 8.0 : 12.0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(screenWidth < 360 ? 12.0 : 16.0),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onPressed();
+          },
+          child: Icon(
+            icon,
+            color: iconColor ?? Colors.white,
+            size: iconSize,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme
@@ -336,74 +572,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                 title: '오늘의 감정 일기',
                 emoji: '📔',
                 showBackButton: true,
-                actions: [
-                  _buildActionButton(
-                    context,
-                    icon: Icons.share_rounded,
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF4FACFE),
-                        const Color(0xFF00F2FE),
-                      ],
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/share');
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionButton(
-                    context,
-                    icon: Icons.edit_rounded,
-                    backgroundColor: isDark ? LifewispColors.darkCardBg : Colors
-                        .white,
-                    iconColor: isDark
-                        ? LifewispColors.darkMainText
-                        : LifewispColors.mainText,
-                    onPressed: () async {
-                      final updated = await Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation, _) =>
-                              EmotionRecordScreen(
-                                initialDate: widget.record.date,
-                                initialEmotion: widget.record.emotion,
-                                initialDiary: widget.record.diary,
-                                isEdit: true,
-                              ),
-                          transitionsBuilder: (context, animation, _, child) {
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(1.0, 0.0),
-                                end: Offset.zero,
-                              ).animate(CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeInOutCubic,
-                              )),
-                              child: child,
-                            );
-                          },
-                        ),
-                      );
-                      if (updated != null && updated is EmotionRecord) {
-                        context.read<EmotionProvider>().editRecord(
-                            widget.record, updated);
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionButton(
-                    context,
-                    icon: Icons.delete_outline_rounded,
-                    gradient: LinearGradient(
-                      colors: [
-                        LifewispColors.pink,
-                        LifewispColors.pinkAccent,
-                      ],
-                    ),
-                    onPressed: () => _showDeleteDialog(context),
-                  ),
-                  const SizedBox(width: 16),
-                ],
+                actions: _buildResponsiveActions(context, isDark),
               ),
 
               // 메인 콘텐츠
@@ -451,13 +620,6 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                   emotion: _getEmotionType(
                                       widget.record.emotion),
                                   size: 140,
-                                  backgroundColor: _getEmotionColor(
-                                      widget.record.emotion, context)
-                                      .withOpacity(0.1),
-                                  borderColor: _getEmotionColor(
-                                      widget.record.emotion, context)
-                                      .withOpacity(0.3),
-                                  borderWidth: 3,
                                 ),
 
                                 const SizedBox(height: 28),
@@ -528,7 +690,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                     '${widget.record.date.year}년 ${widget.record
                                         .date.month}월 ${widget.record.date
                                         .day}일',
-                                    style: LifewispTextStylesExt.subtitleFor(
+                                    style: LifewispTextStyles.getStaticFont(
                                         context).copyWith(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -610,7 +772,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                       const SizedBox(width: 16),
                                       Text(
                                         '하루의 특별한 순간들',
-                                        style: LifewispTextStylesExt.titleFor(
+                                        style: LifewispTextStyles.getStaticFont(
                                             context).copyWith(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
@@ -651,12 +813,12 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                         ),
                                         child: Text(
                                           category,
-                                          style: TextStyle(
+                                          style: LifewispTextStyles.getStaticFont(
+                                            context,
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                             color: _getEmotionColor(
                                                 widget.record.emotion, context),
-                                            letterSpacing: 0.3,
                                           ),
                                         ),
                                       );
@@ -736,7 +898,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                       const SizedBox(width: 16),
                                       Text(
                                         '소중한 순간들',
-                                        style: LifewispTextStylesExt.titleFor(
+                                        style: LifewispTextStyles.getStaticFont(
                                             context).copyWith(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
@@ -854,7 +1016,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                       const SizedBox(width: 16),
                                       Text(
                                         '오늘의 기록',
-                                        style: LifewispTextStylesExt.titleFor(
+                                        style: LifewispTextStyles.getStaticFont(
                                             context).copyWith(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
@@ -898,7 +1060,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                     ),
                                     child: Text(
                                       widget.record.diary,
-                                      style: LifewispTextStylesExt.bodyFor(
+                                      style: LifewispTextStyles.getStaticFont(
                                           context).copyWith(
                                         fontSize: 18,
                                         height: 1.8,
@@ -988,7 +1150,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                       children: [
                                         Text(
                                           '감정 통계 보러가기',
-                                          style: LifewispTextStylesExt.titleFor(
+                                          style: LifewispTextStyles.getStaticFont(
                                               context).copyWith(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
@@ -997,7 +1159,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                                         const SizedBox(height: 6),
                                         Text(
                                           '나의 감정 패턴을 확인해보세요',
-                                          style: LifewispTextStylesExt.subFor(
+                                          style: LifewispTextStyles.getStaticFont(
                                               context).copyWith(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w500,
@@ -1035,44 +1197,6 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton(BuildContext context, {
-    required IconData icon,
-    Gradient? gradient,
-    Color? backgroundColor,
-    Color? iconColor,
-    required VoidCallback onPressed,
-  }) {
-    final isDark = Theme
-        .of(context)
-        .brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: (gradient != null
-                ? gradient.colors.first
-                : (backgroundColor ?? Colors.grey)).withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: IconButton(
-        icon: Icon(
-          icon,
-          color: iconColor ?? Colors.white,
-          size: 20,
-        ),
-        onPressed: onPressed,
       ),
     );
   }
@@ -1122,7 +1246,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                 const SizedBox(height: 24),
                 Text(
                   '기록 삭제',
-                  style: LifewispTextStylesExt.titleFor(context).copyWith(
+                  style: LifewispTextStyles.getStaticFont(context).copyWith(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1131,7 +1255,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                 Text(
                   '이 감정 기록을 삭제할까요?\n삭제된 기록은 복구할 수 없어요.',
                   textAlign: TextAlign.center,
-                  style: LifewispTextStylesExt.subFor(context).copyWith(
+                  style: LifewispTextStyles.getStaticFont(context).copyWith(
                     fontSize: 16,
                     height: 1.5,
                   ),
@@ -1150,7 +1274,7 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                         ),
                         child: Text(
                           '취소',
-                          style: LifewispTextStylesExt.subFor(context).copyWith(
+                          style: LifewispTextStyles.getStaticFont(context).copyWith(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1178,7 +1302,8 @@ class _DiaryDetailScreenState extends State<DiaryDetailScreen>
                         ),
                         child: Text(
                           '삭제',
-                          style: TextStyle(
+                          style: LifewispTextStyles.getStaticFont(
+                            context,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,

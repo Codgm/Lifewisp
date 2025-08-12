@@ -544,7 +544,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     ),
                     child: Text(
                       '결과 보러가기 🚀',
-                      style: GoogleFonts.notoSans(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),

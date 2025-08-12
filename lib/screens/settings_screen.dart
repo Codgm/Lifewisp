@@ -25,7 +25,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
 
 
 
-  final List<String> availableFonts = ['Jua', 'Noto Sans', 'Do Hyeon', 'Black Han Sans', 'Cute Font'];
+  final List<String> availableFonts = ['Poor Story', 'Jua', 'Noto Sans', 'Do Hyeon', 'Black Han Sans', 'Cute Font'];
   final List<String> weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
 
   @override
@@ -200,7 +200,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 SizedBox(height: 4),
                 Text(
                   '오늘도 감정을 기록해보세요 ✨',
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     fontSize: 14,
                     color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                   ),
@@ -256,8 +256,38 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
           title: '감정 기록 알림',
           subtitle: '매일 기록을 잊지 않도록 알려드려요',
           value: userProvider.notificationEnabled,
-          onChanged: (value) {
-            userProvider.setNotificationEnabled(value);
+          onChanged: (value) async {
+            // 알림 설정 변경 시 권한 체크 및 처리
+            if (value) {
+              // 알림 활성화 시 권한 확인
+              final hasPermission = await userProvider.requestNotificationPermissions();
+              if (!hasPermission) {
+                // 권한이 없으면 설정 앱으로 유도하는 다이얼로그 표시
+                _showPermissionDialog(context, isDark);
+                return;
+              }
+            }
+
+            await userProvider.setNotificationEnabled(value);
+
+            // 설정 완료 후 피드백
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    value ? '알림이 활성화되었어요! 🔔' : '알림이 비활성화되었어요! 🔕',
+                    style: LifewispTextStyles.getStaticFont(context,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white
+                    ),
+                  ),
+                  backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  margin: EdgeInsets.all(16),
+                ),
+              );
+            }
           },
           isDark: isDark,
         ),
@@ -274,8 +304,8 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             title: '알림 소리',
             subtitle: '알림음을 재생합니다',
             value: userProvider.soundEnabled,
-            onChanged: (value) {
-              userProvider.setSoundEnabled(value);
+            onChanged: (value) async {
+              await userProvider.setSoundEnabled(value);
             },
             isDark: isDark,
           ),
@@ -284,14 +314,154 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             title: '진동',
             subtitle: '알림 시 진동을 사용합니다',
             value: userProvider.vibrationEnabled,
-            onChanged: (value) {
-              userProvider.setVibrationEnabled(value);
+            onChanged: (value) async {
+              await userProvider.setVibrationEnabled(value);
             },
             isDark: isDark,
           ),
+          _buildDivider(isDark),
+          // 테스트 알림 버튼 추가
+          _buildTestNotificationTile(userProvider, isDark),
         ],
       ],
       isDark: isDark,
+    );
+  }
+
+  Widget _buildTestNotificationTile(UserProvider userProvider, bool isDark) {
+    return InkWell(
+      onTap: () async {
+        final success = await userProvider.sendTestNotification();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                success ? '테스트 알림이 전송되었어요! 🧪' : '테스트 알림 전송에 실패했어요 😥',
+                style: LifewispTextStyles.getStaticFont(context,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white
+                ),
+              ),
+              backgroundColor: success
+                  ? (isDark ? LifewispColors.darkSuccess : const Color(0xFF38B2AC))
+                  : (isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E)),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: EdgeInsets.all(16),
+            ),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? LifewispColors.darkSuccess : const Color(0xFF38B2AC)).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.notifications_active,
+                color: isDark ? LifewispColors.darkSuccess : const Color(0xFF38B2AC),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '테스트 알림',
+                    style: LifewispTextStyles.getStaticFont(context,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '알림이 제대로 작동하는지 확인해보세요',
+                    style: LifewispTextStyles.getStaticFont(context,
+                      fontSize: 14,
+                      color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.send,
+              color: isDark ? LifewispColors.darkSuccess : const Color(0xFF38B2AC),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPermissionDialog(BuildContext context, bool isDark) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.notifications_off,
+              color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
+            ),
+            SizedBox(width: 12),
+            Text(
+              '알림 권한 필요',
+              style: LifewispTextStyles.getStaticFont(context,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '감정 기록 알림을 받기 위해서는 알림 권한이 필요해요.',
+              style: LifewispTextStyles.getStaticFont(context,
+                fontSize: 14,
+                color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '설정 > 앱 > LifeWisp > 알림에서 권한을 허용해주세요.',
+              style: LifewispTextStyles.getStaticFont(context,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '확인',
+              style: LifewispTextStyles.getStaticFont(context,
+                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -395,7 +565,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
           padding: EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
             title,
-            style: TextStyle(
+            style: LifewispTextStyles.getStaticFont(context,
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -472,7 +642,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: LifewispTextStyles.getStaticFont(context,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -481,7 +651,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: LifewispTextStyles.getStaticFont(context,
                       fontSize: 14,
                       color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                     ),
@@ -517,7 +687,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -526,7 +696,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     fontSize: 14,
                     color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                   ),
@@ -578,7 +748,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: LifewispTextStyles.getStaticFont(context,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -587,7 +757,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: LifewispTextStyles.getStaticFont(context,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
@@ -649,7 +819,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
         ),
         label: Text(
           '로그아웃',
-          style: TextStyle(
+          style: LifewispTextStyles.getStaticFont(context,
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
@@ -687,18 +857,23 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
     if (picked != null) {
       await userProvider.setReminderTime(picked);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '알림 시간이 ${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}로 설정되었어요! ⏰',
-            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '알림 시간이 ${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}로 설정되었어요! ⏰',
+              style: LifewispTextStyles.getStaticFont(context,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white
+              ),
+            ),
+            backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: EdgeInsets.all(16),
           ),
-          backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: EdgeInsets.all(16),
-        ),
-      );
+        );
+      }
     }
   }
 
@@ -720,7 +895,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '테마 선택',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -747,7 +922,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '확인',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                 fontWeight: FontWeight.w600,
               ),
@@ -770,7 +945,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
       ),
       title: Text(
         title,
-        style: TextStyle(
+        style: LifewispTextStyles.getStaticFont(context,
           fontSize: 16,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           color: isSelected
@@ -791,7 +966,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
           SnackBar(
             content: Text(
               '$title로 변경되었어요! 🎨',
-              style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+              style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
             ),
             backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
             behavior: SnackBarBehavior.floating,
@@ -820,7 +995,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '주 시작 요일',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -838,7 +1013,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             return ListTile(
               title: Text(
                 day,
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected
@@ -859,7 +1034,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                   SnackBar(
                     content: Text(
                       '$day부터 시작하도록 설정되었어요! 📅',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                      style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                     ),
                     backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                     behavior: SnackBarBehavior.floating,
@@ -895,7 +1070,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               SizedBox(width: 12),
               Text(
                 '폰트 설정',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -905,133 +1080,385 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
           ),
           content: Container(
             width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 폰트 선택
-                Text(
-                  '폰트 종류',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
-                  ),
-                ),
-                SizedBox(height: 12),
-                Container(
-                  height: 150,
-                  child: ListView.builder(
-                    itemCount: availableFonts.length,
-                    itemBuilder: (context, index) {
-                      final font = availableFonts[index];
-                      final isSelected = tempSelectedFont == font;
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 🎨 실시간 미리보기 섹션 - 더 큰 크기와 다양한 텍스트
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [
+                          LifewispColors.darkPrimary.withOpacity(0.15),
+                          LifewispColors.darkPrimary.withOpacity(0.08),
+                        ]
+                            : [
+                          LifewispColors.accent.withOpacity(0.12),
+                          LifewispColors.accent.withOpacity(0.06),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDark
+                            ? LifewispColors.darkPrimary.withOpacity(0.3)
+                            : LifewispColors.accent.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 헤더
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.preview,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              '실시간 미리보기',
+                              style: LifewispTextStyles.getStaticFont(context,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 20),
 
-                      return ListTile(
-                        title: Text(
-                          font,
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: tempFontSize,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        // 다양한 텍스트 샘플로 미리보기
+                        _buildFontPreviewText(
+                          'LifeWisp 감정 일기 ✨',
+                          fontFamily: tempSelectedFont,
+                          fontSize: tempFontSize * 1.2,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Color(0xFF2D3748),
+                        ),
+                        SizedBox(height: 12),
+
+                        _buildFontPreviewText(
+                          '오늘 하루도 감정을 기록해보세요!',
+                          fontFamily: tempSelectedFont,
+                          fontSize: tempFontSize,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                        ),
+                        SizedBox(height: 10),
+
+                        _buildFontPreviewText(
+                          '행복한 하루였어요! 친구들과 즐거운 시간을 보내며 맛있는 음식도 먹었습니다.',
+                          fontFamily: tempSelectedFont,
+                          fontSize: tempFontSize * 0.9,
+                          fontWeight: FontWeight.normal,
+                          color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                          height: 1.5,
+                        ),
+                        SizedBox(height: 8),
+
+                        _buildFontPreviewText(
+                          '가나다라마바사 ABCD 1234 !@#',
+                          fontFamily: tempSelectedFont,
+                          fontSize: tempFontSize * 0.8,
+                          fontWeight: FontWeight.normal,
+                          color: isDark ? LifewispColors.darkSubText.withOpacity(0.7) : LifewispColors.subText.withOpacity(0.7),
+                        ),
+
+                        SizedBox(height: 12),
+
+                        // 감정 표현 미리보기
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildEmotionPreview('😊', '행복해요', tempSelectedFont, tempFontSize * 0.85, isDark),
+                            _buildEmotionPreview('😢', '슬퍼요', tempSelectedFont, tempFontSize * 0.85, isDark),
+                            _buildEmotionPreview('😡', '화나요', tempSelectedFont, tempFontSize * 0.85, isDark),
+                            _buildEmotionPreview('😍', '좋아요', tempSelectedFont, tempFontSize * 0.85, isDark),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 28),
+
+                  // 폰트 선택 섹션
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.font_download_outlined,
+                        color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        '폰트 종류',
+                        style: LifewispTextStyles.getStaticFont(context,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.15)
+                            : Colors.grey.withOpacity(0.25),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      children: availableFonts.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final font = entry.value;
+                        final isSelected = tempSelectedFont == font;
+                        final isFirst = index == 0;
+                        final isLast = index == availableFonts.length - 1;
+
+                        return Container(
+                          decoration: BoxDecoration(
                             color: isSelected
-                                ? (isDark ? LifewispColors.darkPrimary : LifewispColors.accent)
-                                : (isDark ? LifewispColors.darkMainText : LifewispColors.mainText),
+                                ? (isDark ? LifewispColors.darkPrimary.withOpacity(0.15) : LifewispColors.accent.withOpacity(0.12))
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.only(
+                              topLeft: isFirst ? Radius.circular(16) : Radius.zero,
+                              topRight: isFirst ? Radius.circular(16) : Radius.zero,
+                              bottomLeft: isLast ? Radius.circular(16) : Radius.zero,
+                              bottomRight: isLast ? Radius.circular(16) : Radius.zero,
+                            ),
+                          ),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            title: _buildFontPreviewText(
+                              font,
+                              fontFamily: font,
+                              fontSize: 18,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                              color: isSelected
+                                  ? (isDark ? LifewispColors.darkPrimary : LifewispColors.accent)
+                                  : (isDark ? LifewispColors.darkMainText : LifewispColors.mainText),
+                            ),
+                            subtitle: Padding(
+                              padding: EdgeInsets.only(top: 6),
+                              child: _buildFontPreviewText(
+                                '오늘의 감정을 기록해보세요 ✨ ABC 123',
+                                fontFamily: font,
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
+                                color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            )
+                                : Icon(
+                              Icons.radio_button_unchecked,
+                              color: isDark ? LifewispColors.darkSubText.withOpacity(0.5) : LifewispColors.subText.withOpacity(0.5),
+                              size: 20,
+                            ),
+                            onTap: () {
+                              setDialogState(() {
+                                tempSelectedFont = font;
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  SizedBox(height: 28),
+
+                  // 폰트 크기 섹션
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.format_size,
+                        color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        '폰트 크기',
+                        style: LifewispTextStyles.getStaticFont(context,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+
+                  // 폰트 크기 슬라이더
+                  Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.08)
+                          : Colors.grey.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.15)
+                            : Colors.grey.withOpacity(0.25),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                Icon(
+                                  Icons.text_decrease,
+                                  color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                                  size: 20,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '작게',
+                                  style: LifewispTextStyles.getStaticFont(context,
+                                    fontSize: 12,
+                                    color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: isDark
+                                      ? [LifewispColors.darkPrimary, LifewispColors.darkPrimary.withOpacity(0.8)]
+                                      : [LifewispColors.accent, LifewispColors.accent.withOpacity(0.8)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                '${tempFontSize.toInt()}px',
+                                style: LifewispTextStyles.getStaticFont(context,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            Column(
+                              children: [
+                                Icon(
+                                  Icons.text_increase,
+                                  color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                                  size: 20,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '크게',
+                                  style: LifewispTextStyles.getStaticFont(context,
+                                    fontSize: 12,
+                                    color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                            inactiveTrackColor: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.3),
+                            thumbColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                            overlayColor: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.2),
+                            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
+                            overlayShape: RoundSliderOverlayShape(overlayRadius: 18),
+                            trackHeight: 6,
+                          ),
+                          child: Slider(
+                            value: tempFontSize,
+                            min: 12.0,
+                            max: 24.0,
+                            divisions: 12,
+                            onChanged: (value) {
+                              setDialogState(() {
+                                tempFontSize = value;
+                              });
+                            },
                           ),
                         ),
-                        trailing: isSelected
-                            ? Icon(
-                          Icons.check,
-                          color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-                        )
-                            : null,
-                        onTap: () {
-                          setDialogState(() {
-                            tempSelectedFont = font;
-                          });
-                        },
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 24),
-
-                // 폰트 크기
-                Text(
-                  '폰트 크기',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // 미리보기
-                Container(
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? LifewispColors.darkPrimary.withOpacity(0.3) : LifewispColors.accent.withOpacity(0.3),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(5, (index) {
+                            final size = 12.0 + (index * 3);
+                            final isActive = (tempFontSize - size).abs() < 1.5;
+                            return Container(
+                              width: 40,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${size.toInt()}',
+                                style: LifewispTextStyles.getStaticFont(context,
+                                  fontSize: 11,
+                                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                                  color: isActive
+                                      ? (isDark ? LifewispColors.darkPrimary : LifewispColors.accent)
+                                      : (isDark ? LifewispColors.darkSubText : LifewispColors.subText),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Text(
-                    '오늘 하루도 감정을 기록해보세요 ✨',
-                    style: TextStyle(
-                      fontFamily: tempSelectedFont,
-                      fontSize: tempFontSize,
-                      color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // 폰트 크기 슬라이더
-                Row(
-                  children: [
-                    Text(
-                      '작게',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
-                      ),
-                    ),
-                    Expanded(
-                      child: Slider(
-                        value: tempFontSize,
-                        min: 12.0,
-                        max: 24.0,
-                        divisions: 12,
-                        activeColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-                        inactiveColor: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.3),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            tempFontSize = value;
-                          });
-                        },
-                      ),
-                    ),
-                    Text(
-                      '크게',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  '${tempFontSize.toInt()}px',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [
@@ -1039,40 +1466,172 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               onPressed: () => Navigator.pop(context),
               child: Text(
                 '취소',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            TextButton(
-              onPressed: () async {
-                await userProvider.setFontSettings(tempSelectedFont, tempFontSize);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '폰트가 $tempSelectedFont ${tempFontSize.toInt()}px로 변경되었어요! ✨',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-                    ),
-                    backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    margin: EdgeInsets.all(16),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [LifewispColors.darkPrimary, LifewispColors.darkPrimary.withOpacity(0.8)]
+                      : [LifewispColors.accent, LifewispColors.accent.withOpacity(0.8)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.3),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
                   ),
-                );
-              },
-              child: Text(
-                '적용',
-                style: TextStyle(
-                  color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-                  fontWeight: FontWeight.w600,
+                ],
+              ),
+              child: TextButton(
+                onPressed: () async {
+                  await userProvider.setFontSettings(tempSelectedFont, tempFontSize);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(Icons.check_circle, color: Colors.white, size: 18),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              '폰트가 $tempSelectedFont ${tempFontSize.toInt()}px로 변경되었어요! 🎨',
+                              style: LifewispTextStyles.getStaticFont(context,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: isDark ? LifewispColors.darkSuccess : const Color(0xFF38B2AC),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      margin: EdgeInsets.all(16),
+                      duration: Duration(seconds: 3),
+                      elevation: 6,
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    '적용하기',
+                    style: LifewispTextStyles.getStaticFont(context,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFontPreviewText(
+      String text, {
+        required String fontFamily,
+        required double fontSize,
+        FontWeight? fontWeight,
+        Color? color,
+        double? height,
+      }) {
+    // 선택된 폰트에 따라 GoogleFonts 적용
+    TextStyle textStyle;
+    switch (fontFamily) {
+      case 'Poor Story':
+        textStyle = GoogleFonts.poorStory(
+          fontSize: fontSize,
+          fontWeight: fontWeight ?? FontWeight.normal,
+          color: color ?? Colors.black,
+          height: height,
+        );
+        break;
+      case 'Jua':
+        textStyle = GoogleFonts.jua(
+          fontSize: fontSize,
+          fontWeight: fontWeight ?? FontWeight.normal,
+          color: color ?? Colors.black,
+          height: height,
+        );
+        break;
+      case 'Noto Sans':
+        textStyle = GoogleFonts.notoSans(
+          fontSize: fontSize,
+          fontWeight: fontWeight ?? FontWeight.normal,
+          color: color ?? Colors.black,
+          height: height,
+        );
+        break;
+      case 'Do Hyeon':
+        textStyle = GoogleFonts.doHyeon(
+          fontSize: fontSize,
+          fontWeight: fontWeight ?? FontWeight.normal,
+          color: color ?? Colors.black,
+          height: height,
+        );
+        break;
+      case 'Black Han Sans':
+        textStyle = GoogleFonts.blackHanSans(
+          fontSize: fontSize,
+          fontWeight: fontWeight ?? FontWeight.normal,
+          color: color ?? Colors.black,
+          height: height,
+        );
+        break;
+      case 'Cute Font':
+        textStyle = GoogleFonts.cuteFont(
+          fontSize: fontSize,
+          fontWeight: fontWeight ?? FontWeight.normal,
+          color: color ?? Colors.black,
+          height: height,
+        );
+        break;
+      default:
+        textStyle = GoogleFonts.poorStory(
+          fontSize: fontSize,
+          fontWeight: fontWeight ?? FontWeight.normal,
+          color: color ?? Colors.black,
+          height: height,
+        );
+    }
+
+    return Text(text, style: textStyle);
+  }
+
+  Widget _buildEmotionPreview(String emoji, String label, String fontFamily, double fontSize, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          emoji,
+          style: TextStyle(fontSize: fontSize * 1.4),
+        ),
+        SizedBox(height: 4),
+        _buildFontPreviewText(
+          label,
+          fontFamily: fontFamily,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w500,
+          color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+        ),
+      ],
     );
   }
 
@@ -1094,7 +1653,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '프로필 수정',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1107,12 +1666,12 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
           children: [
             TextField(
               controller: nicknameController,
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
               ),
               decoration: InputDecoration(
                 labelText: '닉네임',
-                labelStyle: TextStyle(
+                labelStyle: LifewispTextStyles.getStaticFont(context,
                   color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 ),
                 filled: true,
@@ -1146,13 +1705,13 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-                      TextButton(
+          TextButton(
               onPressed: () async {
                 await userProvider.setUserNickname(nicknameController.text.trim());
                 Navigator.pop(context);
@@ -1160,7 +1719,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                   SnackBar(
                     content: Text(
                       '프로필이 수정되었어요! ✨',
-                    style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                    style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                   ),
                   backgroundColor: isDark ? LifewispColors.darkSuccess : const Color(0xFF38B2AC),
                   behavior: SnackBarBehavior.floating,
@@ -1171,7 +1730,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             },
             child: Text(
               '저장',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                 fontWeight: FontWeight.w600,
               ),
@@ -1199,7 +1758,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '비밀번호 재설정',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1209,7 +1768,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
         ),
         content: Text(
           '등록된 이메일로 비밀번호 재설정 링크를 보내드릴게요! 📧',
-          style: TextStyle(
+          style: LifewispTextStyles.getStaticFont(context,
             fontSize: 14,
             color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
           ),
@@ -1219,7 +1778,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 fontWeight: FontWeight.w500,
               ),
@@ -1232,7 +1791,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 SnackBar(
                   content: Text(
                     '이메일이 전송되었어요! 📧',
-                    style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                    style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                   ),
                   backgroundColor: isDark ? LifewispColors.darkSuccess : const Color(0xFF38B2AC),
                   behavior: SnackBarBehavior.floating,
@@ -1243,7 +1802,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             },
             child: Text(
               '전송',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                 fontWeight: FontWeight.w600,
               ),
@@ -1271,7 +1830,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '도움말',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1285,7 +1844,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
           children: [
             Text(
               '📝 감정 기록하기',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1294,7 +1853,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(height: 4),
             Text(
               '매일의 감정과 하루 일과를 간단히 기록할 수 있어요',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 14,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
               ),
@@ -1302,7 +1861,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(height: 16),
             Text(
               '📊 통계 보기',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1311,7 +1870,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(height: 4),
             Text(
               '감정 변화를 차트로 확인하고 패턴을 분석해보세요',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 14,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
               ),
@@ -1319,7 +1878,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(height: 16),
             Text(
               '🔔 알림 설정',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1328,7 +1887,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(height: 4),
             Text(
               '매일 정해진 시간에 기록 알림을 받을 수 있어요',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 14,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
               ),
@@ -1340,7 +1899,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '확인',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                 fontWeight: FontWeight.w600,
               ),
@@ -1376,7 +1935,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             const SizedBox(width: 12),
             Text(
               'LifeWisp',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1390,7 +1949,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
           children: [
             Text(
               '버전: 1.0.0',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 14,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
               ),
@@ -1398,15 +1957,15 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             const SizedBox(height: 8),
             Text(
               '당신의 감정을 소중히 기록하고 관리하는 앱입니다. 💜',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 14,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '개발자: LifeWisp Team',
-              style: TextStyle(
+              '개발자: Codgm',
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 14,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
               ),
@@ -1418,7 +1977,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '확인',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                 fontWeight: FontWeight.w600,
               ),
@@ -1448,7 +2007,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               SizedBox(width: 12),
               Text(
                 '앱 평가하기',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1461,7 +2020,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             children: [
               Text(
                 'LifeWisp는 어떠셨나요?',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   fontSize: 16,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                 ),
@@ -1495,7 +2054,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                       : selectedRating >= 3
                       ? '더욱 발전하겠습니다! 😊'
                       : '소중한 의견 감사합니다 🙏',
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     fontSize: 14,
                     color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                     fontWeight: FontWeight.w600,
@@ -1508,7 +2067,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               onPressed: () => Navigator.pop(context),
               child: Text(
                 '취소',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1521,7 +2080,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                   SnackBar(
                     content: Text(
                       '평가해주셔서 감사합니다! ⭐',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                      style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                     ),
                     backgroundColor: Colors.amber,
                     behavior: SnackBarBehavior.floating,
@@ -1532,7 +2091,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               } : null,
               child: Text(
                 '제출',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   color: selectedRating > 0
                       ? (isDark ? LifewispColors.darkPrimary : LifewispColors.accent)
                       : Colors.grey,
@@ -1563,7 +2122,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '프로필 사진 변경',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1581,7 +2140,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               ),
               title: Text(
                 '갤러리에서 선택',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   fontSize: 16,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                 ),
@@ -1594,7 +2153,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                   SnackBar(
                     content: Text(
                       '프로필 사진이 변경되었어요! 📸',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                      style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                     ),
                     backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                     behavior: SnackBarBehavior.floating,
@@ -1611,7 +2170,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               ),
               title: Text(
                 '카메라로 촬영',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   fontSize: 16,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                 ),
@@ -1624,7 +2183,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                   SnackBar(
                     content: Text(
                       '프로필 사진이 변경되었어요! 📸',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                      style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                     ),
                     backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                     behavior: SnackBarBehavior.floating,
@@ -1642,7 +2201,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 ),
                 title: Text(
                   '프로필 사진 제거',
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     fontSize: 16,
                     color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                   ),
@@ -1654,7 +2213,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                     SnackBar(
                       content: Text(
                         '프로필 사진이 제거되었어요! 🗑️',
-                        style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                        style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                       ),
                       backgroundColor: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                       behavior: SnackBarBehavior.floating,
@@ -1671,7 +2230,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 fontWeight: FontWeight.w500,
               ),
@@ -1699,7 +2258,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '로그아웃',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1709,7 +2268,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
         ),
         content: Text(
           '정말로 로그아웃하시겠어요? 🥺',
-          style: TextStyle(
+          style: LifewispTextStyles.getStaticFont(context,
             fontSize: 14,
             color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
           ),
@@ -1719,7 +2278,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 fontWeight: FontWeight.w500,
               ),
@@ -1733,7 +2292,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             },
             child: Text(
               '로그아웃',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                 fontWeight: FontWeight.w600,
               ),
@@ -1761,7 +2320,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '프로필 사진 변경',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -1779,7 +2338,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               ),
               title: Text(
                 '갤러리에서 선택',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                 ),
               ),
@@ -1795,7 +2354,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
               ),
               title: Text(
                 '카메라로 촬영',
-                style: TextStyle(
+                style: LifewispTextStyles.getStaticFont(context,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                 ),
               ),
@@ -1812,7 +2371,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 ),
                 title: Text(
                   '현재 사진 삭제',
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                   ),
                 ),
@@ -1828,7 +2387,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 fontWeight: FontWeight.w500,
               ),
@@ -1854,7 +2413,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
         SnackBar(
           content: Text(
             '프로필 사진이 변경되었어요! 📸',
-            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+            style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
           ),
           backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
           behavior: SnackBarBehavior.floating,
@@ -1880,7 +2439,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
         SnackBar(
           content: Text(
             '프로필 사진이 변경되었어요! 📸',
-            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+            style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
           ),
           backgroundColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
           behavior: SnackBarBehavior.floating,
@@ -1893,13 +2452,13 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
 
   void _removeProfileImage(BuildContext context, UserProvider userProvider) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     userProvider.setProfileImage('');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           '프로필 사진이 제거되었어요! 🗑️',
-          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
         ),
         backgroundColor: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
         behavior: SnackBarBehavior.floating,
@@ -1966,7 +2525,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '구독 관리',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -2001,7 +2560,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                       SizedBox(width: 8),
                       Text(
                         subscriptionProvider.isPremium ? '프리미엄 구독 중' : '무료 플랜',
-                        style: TextStyle(
+                        style: LifewispTextStyles.getStaticFont(context,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: isDark ? LifewispColors.darkPink : LifewispColors.pink,
@@ -2014,7 +2573,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                     subscriptionProvider.isPremium 
                         ? '모든 프리미엄 기능을 이용할 수 있어요! ✨'
                         : '프리미엄으로 업그레이드하여 더 많은 기능을 이용해보세요!',
-                    style: TextStyle(
+                    style: LifewispTextStyles.getStaticFont(context,
                       fontSize: 14,
                       color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                     ),
@@ -2031,7 +2590,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 ),
                 title: Text(
                   '구독 취소',
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                   ),
                 ),
@@ -2048,7 +2607,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 ),
                 title: Text(
                   '프리미엄으로 업그레이드',
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(context,
                     color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
                   ),
                 ),
@@ -2065,7 +2624,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '닫기',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 fontWeight: FontWeight.w500,
               ),
@@ -2093,7 +2652,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             SizedBox(width: 12),
             Text(
               '구독 취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -2103,7 +2662,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
         ),
         content: Text(
           '정말로 프리미엄 구독을 취소하시겠어요?\n\n구독을 취소하면 프리미엄 기능을 더 이상 이용할 수 없어요.',
-          style: TextStyle(
+          style: LifewispTextStyles.getStaticFont(context,
             fontSize: 14,
             color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
           ),
@@ -2113,7 +2672,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             onPressed: () => Navigator.pop(context),
             child: Text(
               '취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 fontWeight: FontWeight.w500,
               ),
@@ -2128,7 +2687,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
                 SnackBar(
                   content: Text(
                     '구독이 취소되었어요! 😢',
-                    style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+                    style: LifewispTextStyles.getStaticFont(context, fontWeight: FontWeight.w500, color: Colors.white),
                   ),
                   backgroundColor: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                   behavior: SnackBarBehavior.floating,
@@ -2139,7 +2698,7 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             },
             child: Text(
               '구독 취소',
-              style: TextStyle(
+              style: LifewispTextStyles.getStaticFont(context,
                 color: isDark ? LifewispColors.darkRed : const Color(0xFFE53E3E),
                 fontWeight: FontWeight.w600,
               ),

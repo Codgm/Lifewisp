@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../main.dart';
 import 'package:lifewisp/providers/user_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -194,9 +195,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         )
             : LinearGradient(
           colors: [
-            Color(0xFFFF6B9D), // 핑크
-            Color(0xFF9B59B6), // 퍼플
-            Color(0xFF3498DB), // 블루
+            Color(0xFFFBADC8), // 핑크
+            Color(0xFFCD9DE1), // 퍼플
+            Color(0xFF94C4E4), // 블루
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -292,27 +293,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     // 타이틀
                     Stack(
                       children: [
-                        // 테두리용
                         Text(
                           'Lifewisp',
-                          style: TextStyle(
-                            fontSize: isDesktop ? 42 : (isWide ? 38 : 36),
-                            fontWeight: FontWeight.w800,
-                            foreground: Paint()
-                              ..style = PaintingStyle.stroke
-                              ..strokeWidth = 2
-                              ..color = (isDark ? Colors.black : Colors.black).withOpacity(0.3),
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        // 본문
-                        Text(
-                          'Lifewisp',
-                          style: TextStyle(
+                          style: LifewispTextStyles.getStaticFont(
+                            context,
                             fontSize: isDesktop ? 42 : (isWide ? 38 : 36),
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
-                            letterSpacing: 1.2,
                           ),
                         ),
                       ],
@@ -322,7 +309,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     // 서브타이틀
                     Text(
                       '다시 만나서 반가워요!',
-                      style: TextStyle(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: isDesktop ? 20 : (isWide ? 19 : 18),
                         fontWeight: FontWeight.w600,
                         color: isDesktop
@@ -333,7 +321,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     SizedBox(height: isDesktop ? 12 : 8),
                     Text(
                       '감정 여행을 이어가볼까요? ✨',
-                      style: TextStyle(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: isDesktop ? 16 : (isWide ? 15 : 14),
                         fontWeight: FontWeight.w500,
                         color: isDesktop
@@ -416,10 +405,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   Expanded(
                     child: Text(
                       error!,
-                      style: TextStyle(
-                        color: isDark ? LifewispColors.darkRed : Colors.red,
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: isDesktop ? 15 : 14,
                         fontWeight: FontWeight.w500,
+                        color: isDark ? LifewispColors.darkRed : Colors.red,
                       ),
                     ),
                   ),
@@ -437,11 +427,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 // 비밀번호 찾기 로직
               },
               child: Text(
-                '비밀번호를 잊으셨나요?',
-                style: TextStyle(
+                '비밀번번호를 잊으셨나요?',
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: isDesktop ? 15 : 14,
-                  color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
                   fontWeight: FontWeight.w600,
+                  color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
                 ),
               ),
             ),
@@ -456,7 +447,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               gradient: LinearGradient(
                 colors: isDark
                     ? [LifewispColors.darkPink, LifewispColors.darkPurple]
-                    : [Color(0xFFFF6B9D), Color(0xFF9B59B6)],
+                    : [Color(0xFFECA8BF), Color(0xFFC593DA)],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
@@ -494,7 +485,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   const SizedBox(width: 12),
                   Text(
                     '로그인하기',
-                    style: TextStyle(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       fontSize: isDesktop ? 20 : 18,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -505,8 +497,63 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             ),
           ),
 
-          SizedBox(height: isDesktop ? 28 : 24),
-
+          SizedBox(height: isDesktop ? 20 : 16),
+          
+          // 구글 로그인 버튼
+          Container(
+            height: isDesktop ? 60 : 56,
+            decoration: BoxDecoration(
+              color: isDark ? LifewispColors.darkCardBg : Colors.white,
+              borderRadius: BorderRadius.circular(isDesktop ? 30 : 28),
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: TextButton(
+              onPressed: _handleGoogleSignIn,
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(isDesktop ? 30 : 28),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/google_logo.png',
+                    width: 24,
+                    height: 24,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.g_mobiledata,
+                      size: 24,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '구글 계정으로 로그인',
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
+                      fontSize: isDesktop ? 18 : 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          SizedBox(height: isDesktop ? 16 : 12),
+          
           // 회원가입 버튼
           Container(
             height: isDesktop ? 60 : 56,
@@ -541,7 +588,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   const SizedBox(width: 8),
                   Text(
                     '새로운 계정 만들기',
-                    style: TextStyle(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       fontSize: isDesktop ? 18 : 16,
                       fontWeight: FontWeight.w600,
                       color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
@@ -576,10 +624,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     const SizedBox(width: 8),
                     Text(
                       '감정을 안전하게 기록해요',
-                      style: TextStyle(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: isDesktop ? 16 : 14,
-                        color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
                         fontWeight: FontWeight.w600,
+                        color: isDark ? LifewispColors.darkPink : const Color(0xFFFF6B9D),
                       ),
                     ),
                   ],
@@ -587,10 +636,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 SizedBox(height: isDesktop ? 12 : 8),
                 Text(
                   '모든 데이터는 암호화되어 안전하게 보관됩니다',
-                  style: TextStyle(
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
                     fontSize: isDesktop ? 14 : 12,
-                    color: isDark ? LifewispColors.darkSubText : const Color(0xFF9CA3AF),
                     fontWeight: FontWeight.w500,
+                    color: isDark ? LifewispColors.darkSubText : const Color(0xFF9CA3AF),
                   ),
                 ),
               ],
@@ -681,23 +731,65 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   }
 
   Future<void> _handleLogin() async {
+    if (emailController.text.trim().isEmpty) {
+      setState(() { error = '이메일을 입력해주세요.'; });
+      return;
+    }
+    
+    if (passwordController.text.isEmpty) {
+      setState(() { error = '비밀번호를 입력해주세요.'; });
+      return;
+    }
+    
     setState(() { isLoading = true; error = null; });
 
-    // 로딩 애니메이션을 위한 딜레이
-    await Future.delayed(const Duration(milliseconds: 800));
-
     try {
-      // 실제 로그인 로직 대신 UserProvider의 더미 로그인 사용
-      await Provider.of<UserProvider>(context, listen: false).login(emailController.text, passwordController.text);
-      // 로그인 성공 시 MainNavigation으로 이동 (모든 라우트 대체)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => MainNavigation()),
+      // Firebase Auth Provider 사용
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.signIn(
+        emailController.text.trim(), 
+        passwordController.text
       );
+      
+      if (success) {
+        // 로그인 성공 시 MainNavigation으로 이동 (모든 라우트 대체)
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MainNavigation()),
+        );
+      }
     } catch (e) {
       setState(() {
-        error = '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.';
+        error = e.toString();
         isLoading = false;
+      });
+    }
+  }
+  
+  // 구글 로그인 처리
+  Future<void> _handleGoogleSignIn() async {
+    setState(() { isLoading = true; error = null; });
+    
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.signInWithGoogle();
+      
+      if (success) {
+        // 로그인 성공 시 MainNavigation으로 이동
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MainNavigation()),
+        );
+      } else {
+        setState(() {
+          isLoading = false;
+          error = '구글 로그인에 실패했습니다. 다시 시도해주세요.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        error = e.toString();
       });
     }
   }

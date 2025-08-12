@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:lifewisp/services/notification_service.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'package:lifewisp/screens/dashboard_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'firebase_options.dart';
 import 'providers/emotion_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/subscription_provider.dart';
+import 'providers/auth_provider.dart';
+import 'providers/goal_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/chat_screen.dart';
@@ -22,7 +30,37 @@ import 'widgets/common_app_bar.dart';
 import 'screens/emotion_record_screen.dart';
 import 'screens/subscription_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  tz.initializeTimeZones();
+
+  await NotificationService().initialize();
+  
+  // .env 파일 로드 시도
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print('.env 파일 로드 중 오류 발생: $e');
+    if (kIsWeb) {
+      print('웹 환경에서는 .env 파일 로드에 제한이 있을 수 있습니다.');
+      // 웹 환경에서 기본값 설정 또는 대체 로직 구현
+    }
+  }
+  
+  // Firebase 초기화
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error) {
+    print('Firebase 초기화 오류: $error');
+    // 웹 플랫폼에서 발생할 수 있는 오류를 더 자세히 처리
+    if (kIsWeb) {
+      print('웹 플랫폼에서 Firebase 초기화 중 오류가 발생했습니다. Firebase 설정을 확인하세요.');
+    }
+  }
+  
   runApp(const MyApp());
 }
 
@@ -33,16 +71,29 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EmotionProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, UserProvider>(
+          create: (context) => UserProvider(),
+          update: (context, authProvider, userProvider) {
+            // AuthProvider가 변경될 때마다 UserProvider 초기화
+            if (userProvider != null) {
+              userProvider.initialize(authProvider: authProvider);
+            }
+            return userProvider ?? UserProvider();
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => GoalProvider()),
       ],
       child: Consumer<UserProvider>(
         builder: (context, userProvider, _) {
           return MaterialApp(
             title: 'Lifewisp',
-            theme: appTheme,
-            darkTheme: lifewispDarkTheme,
+            navigatorKey: NavigationService.navigatorKey,
+            theme: getAppTheme(context, isDark: false),
+            darkTheme: getAppTheme(context, isDark: true),
             themeMode: userProvider.themeMode,
             debugShowCheckedModeBanner: false,
             home: const AppInitializer(),
@@ -50,7 +101,7 @@ class MyApp extends StatelessWidget {
               '/splash': (_) => SplashScreen(),
               '/onboarding': (_) => OnboardingScreen(),
               '/chat': (_) => const ChatScreen(),
-              '/ai_chat': (_) => const ChatScreen(), // AI 채팅용 (추후 분리 가능)
+              '/ai_chat': (_) => const ChatScreen(),
               '/result': (context) {
                 final args = ModalRoute.of(context)!.settings.arguments;
                 if (args == null || args is! Map<String, dynamic>) {
@@ -114,8 +165,9 @@ class _AppInitializerState extends State<AppInitializer> {
 
     final subscriptionProvider = Provider.of<SubscriptionProvider>(context, listen: false);
     await subscriptionProvider.initialize();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    await userProvider.initialize();
+    await userProvider.initialize(authProvider: authProvider);
     
     // 스플래시 화면 표시
     setState(() {
@@ -198,89 +250,3 @@ class _MainNavigationState extends State<MainNavigation> {
     );
   }
 }
-
-// 구독 화면 (임시 구현)
-class SubscriptionScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CommonAppBar(title: '프리미엄 구독', emoji: '✨'),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('🎯', style: TextStyle(fontSize: 64)),
-            SizedBox(height: 24),
-            Text(
-              'Lifewisp Premium',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'AI 기능으로 더 깊은 감정 분석을 경험해보세요',
-              style: Theme.of(context).textTheme.bodyLarge,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 32),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                children: [
-                  _buildFeatureItem('🤖 AI 감정 분석 채팅'),
-                  _buildFeatureItem('📊 고급 패턴 분석'),
-                  _buildFeatureItem('💡 개인화된 AI 회고'),
-                  _buildFeatureItem('🎯 맞춤형 성장 목표'),
-                  _buildFeatureItem('📈 무제한 감정 기록'),
-                ],
-              ),
-            ),
-            SizedBox(height: 40),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 32),
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // 구독 로직 구현
-                  final subscription = Provider.of<SubscriptionProvider>(context, listen: false);
-                  subscription.upgradeToPremium();
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('프리미엄으로 업그레이드되었습니다! 🎉')),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Text(
-                  '프리미엄 시작하기',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  Widget _buildFeatureItem(String feature) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(Icons.check_circle, color: Colors.green, size: 20),
-          SizedBox(width: 12),
-          Text(feature, style: TextStyle(fontSize: 16)),
-        ],
-      ),
-    );
-  }
-}
-

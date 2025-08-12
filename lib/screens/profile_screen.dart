@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/emotion_record.dart';
-import '../providers/user_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/user_provider.dart';
+// import '../providers/auth_provider.dart';
 import '../widgets/season_animation.dart';
 import '../utils/season_utils.dart';
 import '../widgets/rabbit_emoticon.dart';
 import '../providers/emotion_provider.dart';
 import 'package:provider/provider.dart';
 import '../widgets/common_app_bar.dart';
+import '../utils/growth_badge_system.dart';
 import '../utils/theme.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -118,7 +120,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         // 계절 설명
                         Text(
                           SeasonUtils.getSeasonDescription(currentSeason),
-                          style: GoogleFonts.jua(
+                          style: LifewispTextStyles.getStaticFont(
+                            context,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: LifewispColorsExt.subTextFor(context),
@@ -141,7 +144,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             child: Text(
                               'Level $currentLevel ✨',
-                              style: GoogleFonts.jua(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -159,10 +163,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildEmotionChartSection(recent7),
                         const SizedBox(height: 24),
                         _buildGrowthBadgesSection(),
-                        const SizedBox(height: 20),
-                        
-                        // 로그아웃 버튼
-                        _buildLogoutButton(),
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -218,7 +218,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Text(
               userProvider.userNickname ?? '감정 탐험가',
-              style: GoogleFonts.jua(
+              style: LifewispTextStyles.getStaticFont(
+                context,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: LifewispColorsExt.mainTextFor(context),
@@ -263,7 +264,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Text(
               description,
-              style: GoogleFonts.jua(
+              style: LifewispTextStyles.getStaticFont(
+                context,
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 color: LifewispColorsExt.subTextFor(context),
@@ -303,7 +305,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(width: 8),
                       Text(
                         '성장 메시지',
-                        style: GoogleFonts.jua(
+                        style: LifewispTextStyles.getStaticFont(
+                          context,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: isDark ? LifewispColors.darkPink : LifewispColors.pink,
@@ -314,7 +317,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 8),
                   Text(
                     growthMsg,
-                    style: GoogleFonts.jua(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: LifewispColorsExt.mainTextFor(context),
@@ -377,7 +381,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           '이번 주 감정 통계',
-          style: GoogleFonts.jua(
+          style: LifewispTextStyles.getStaticFont(
+            context,
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: LifewispColorsExt.mainTextFor(context),
@@ -422,24 +427,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatItem(String emoji, String label, String percentage, Color color) {
     return Column(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.withOpacity(0.1),
-          ),
-          child: Center(
-            child: RabbitEmoticon(
-              emotion: _mapStringToRabbitEmotion(emoji),
-              size: 40,
-            ),
-          ),
+        RabbitEmoticon(
+          emotion: _mapStringToRabbitEmotion(emoji),
+          size: 40,
         ),
         const SizedBox(height: 8),
         Text(
           label,
-          style: GoogleFonts.jua(
+          style: LifewispTextStyles.getStaticFont(
+            context,
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: LifewispColorsExt.subTextFor(context),
@@ -448,7 +444,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 4),
         Text(
           percentage,
-          style: GoogleFonts.jua(
+          style: LifewispTextStyles.getStaticFont(
+            context,
             fontSize: 14,
             fontWeight: FontWeight.w700,
             color: color,
@@ -467,7 +464,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           '최근 7일 감정 변화',
-          style: GoogleFonts.jua(
+          style: LifewispTextStyles.getStaticFont(
+            context,
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: LifewispColorsExt.mainTextFor(context),
@@ -501,19 +499,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       width: 36,
                       height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: (isDark ? LifewispColors.darkPink : LifewispColors.pink).withOpacity(0.1),
-                      ),
+                      // decoration 완전 제거
                       child: Center(
                         child: hasValidRecord
                             ? RabbitEmoticon(
                           emotion: _mapStringToRabbitEmotion(record.emotion),
                           size: 30,
-                        )
+                          )
                             : Text(
                             '-',
-                            style: TextStyle(
+                            style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 18,
                                 color: LifewispColorsExt.subTextFor(context)
                             )
@@ -523,7 +519,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 8),
                     Text(
                       days[index],
-                      style: GoogleFonts.jua(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: LifewispColorsExt.subTextFor(context),
@@ -541,19 +538,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildGrowthBadgesSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final badges = [
-      {'emoji': '🎯', 'title': '꾸준한 기록', 'desc': '7일 연속 기록'},
-      {'emoji': '🌟', 'title': '감정 탐험가', 'desc': '다양한 감정 경험'},
-      {'emoji': '💪', 'title': '성장하는 마음', 'desc': '긍정적 변화'},
-    ];
+    final emotionProvider = Provider.of<EmotionProvider>(context);
+    final records = emotionProvider.records ?? [];
+    final badges = GrowthBadgeSystem.getBadges(records);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '성장 배지',
-          style: GoogleFonts.jua(
+          style: LifewispTextStyles.getStaticFont(
+            context,
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: LifewispColorsExt.mainTextFor(context),
@@ -561,6 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
         Container(
+          height: 280, // 3개 배지 + 여백에 맞는 높이 설정
           decoration: BoxDecoration(
             color: LifewispColorsExt.cardBgFor(context),
             borderRadius: BorderRadius.circular(16),
@@ -576,25 +572,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Column(
-              children: badges.map((badge) {
+            child: ListView.builder(
+              itemCount: badges.length,
+              itemBuilder: (context, index) {
+                final badge = badges[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: Row(
                     children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: (isDark ? LifewispColors.darkPink : LifewispColors.pink).withOpacity(0.1),
-                        ),
-                        child: Center(
-                          child: RabbitEmoticon(
-                            emotion: _mapStringToRabbitEmotion(badge['emoji']!),
-                            size: 40,
-                          ),
-                        ),
+                      Text(
+                        badge.emoji,
+                        style: TextStyle(fontSize: 40),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -602,8 +590,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              badge['title']!,
-                              style: GoogleFonts.jua(
+                              badge.title,
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: LifewispColorsExt.mainTextFor(context),
@@ -611,8 +600,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              badge['desc']!,
-                              style: GoogleFonts.jua(
+                              badge.description,
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w400,
                                 color: LifewispColorsExt.subTextFor(context),
@@ -621,15 +611,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                      Icon(
+                      // 달성 상태에 따른 아이콘
+                      badge.isAchieved
+                          ? Icon(
                         Icons.check_circle,
                         color: isDark ? LifewispColors.darkGreen : LifewispColors.green,
+                        size: 20,
+                      )
+                          : Icon(
+                        Icons.radio_button_unchecked,
+                        color: isDark
+                            ? LifewispColors.darkSubText.withOpacity(0.5)
+                            : LifewispColors.subText.withOpacity(0.5),
                         size: 20,
                       ),
                     ],
                   ),
                 );
-              }).toList(),
+              },
             ),
           ),
         ),
@@ -663,127 +662,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return RabbitEmotion.anxious;
       default:
         return RabbitEmotion.happy;
-    }
-  }
-
-  // 로그아웃 버튼
-  Widget _buildLogoutButton() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        color: isDark ? LifewispColors.darkCardBg : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: (isDark ? LifewispColors.darkRed : Colors.red).withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextButton(
-        onPressed: () => _showLogoutDialog(),
-        style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.logout,
-              color: isDark ? LifewispColors.darkRed : Colors.red,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '로그아웃',
-              style: GoogleFonts.jua(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDark ? LifewispColors.darkRed : Colors.red,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 로그아웃 확인 다이얼로그
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.logout, color: Colors.red),
-              const SizedBox(width: 8),
-              Text('로그아웃'),
-            ],
-          ),
-          content: Text('정말 로그아웃하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('취소'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _handleLogout();
-              },
-              child: Text(
-                '로그아웃',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // 로그아웃 처리
-  Future<void> _handleLogout() async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.signOut();
-      
-      // 로그아웃 성공 시 로그인 화면으로 이동
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/login',
-        (route) => false,
-      );
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('로그아웃되었습니다.'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('로그아웃 중 오류가 발생했습니다: $e'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
     }
   }
 }

@@ -208,13 +208,25 @@ class _ResultScreenState extends State<ResultScreen>
 
           Column(
             children: [
-              // 감정 토끼 이모티콘
-              RabbitEmoticon(
-                emotion: _convertEmotionToRabbit(emotion),
-                size: 120,
-                backgroundColor: isDark ? LifewispColors.darkCardBg : Colors.white,
-                borderColor: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
-                borderWidth: 3,
+              // 감정 토끼 이모티콘 - 배경 제거
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [LifewispColors.darkPrimary.withOpacity(0.1), LifewispColors.darkPrimary.withOpacity(0.05)]
+                        : [LifewispColors.accent.withOpacity(0.1), LifewispColors.accent.withOpacity(0.05)],
+                  ),
+                  border: Border.all(
+                    color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                    width: 2,
+                  ),
+                ),
+                child: RabbitEmoticon(
+                  emotion: _convertEmotionToRabbit(emotion),
+                  size: 90,
+                ),
               ),
 
               SizedBox(height: 16),
@@ -245,7 +257,8 @@ class _ResultScreenState extends State<ResultScreen>
                 ),
                 child: Text(
                   '분석 신뢰도: ${(confidence * 100).toInt()}%',
-                  style: GoogleFonts.jua(
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
@@ -331,7 +344,8 @@ class _ResultScreenState extends State<ResultScreen>
               SizedBox(width: 12),
               Text(
                 'AI 상담 요약',
-                style: GoogleFonts.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -342,7 +356,8 @@ class _ResultScreenState extends State<ResultScreen>
           SizedBox(height: 16),
           Text(
             summary,
-            style: GoogleFonts.jua(
+            style: LifewispTextStyles.getStaticFont(
+              context,
               fontSize: 16,
               color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
               height: 1.6,
@@ -369,7 +384,8 @@ class _ResultScreenState extends State<ResultScreen>
               ),
               child: Text(
                 keyword,
-                style: GoogleFonts.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: isDark ? LifewispColors.darkPink : LifewispColors.pink,
@@ -451,7 +467,8 @@ class _ResultScreenState extends State<ResultScreen>
                 Expanded(
                   child: Text(
                     insight,
-                    style: GoogleFonts.jua(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       fontSize: 14,
                       color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                       height: 1.5,
@@ -590,7 +607,8 @@ class _ResultScreenState extends State<ResultScreen>
               SizedBox(width: 12),
               Text(
                 '다음 단계',
-                style: GoogleFonts.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -688,7 +706,8 @@ class _ResultScreenState extends State<ResultScreen>
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.jua(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -697,7 +716,8 @@ class _ResultScreenState extends State<ResultScreen>
                   SizedBox(height: 4),
                   Text(
                     description,
-                    style: GoogleFonts.jua(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       fontSize: 14,
                       color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                     ),

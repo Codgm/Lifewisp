@@ -192,7 +192,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                             SizedBox(height: 8),
                             Text(
                               '${displayRecords.length}',
-                              style: GoogleFonts.jua(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 color: isDark
@@ -202,7 +203,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                             ),
                             Text(
                               '총 기록',
-                              style: GoogleFonts.jua(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 12,
                                 color: isDark
                                     ? LifewispColors.darkSubText
@@ -240,7 +242,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                             SizedBox(height: 8),
                             Text(
                               '7일',
-                              style: GoogleFonts.jua(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 color: isDark
@@ -250,7 +253,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                             ),
                             Text(
                               '연속 기록',
-                              style: GoogleFonts.jua(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 12,
                                 color: isDark
                                     ? LifewispColors.darkSubText
@@ -283,7 +287,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: '감정 기록 검색하기...',
-                      hintStyle: GoogleFonts.jua(
+                      hintStyle: LifewispTextStyles.getStaticFont(
+                        context,
                         color: isDark ? LifewispColors.darkSubText : Color(
                             0xFF9CA3AF),
                         fontSize: 16,
@@ -298,7 +303,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 20, vertical: 16),
                     ),
-                    style: GoogleFonts.jua(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       color: isDark
                           ? LifewispColors.darkMainText
                           : LifewispColors.darkGray,
@@ -322,7 +328,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                         child: FilterChip(
                           label: Text(
                             '전체',
-                            style: GoogleFonts.notoSans(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: filterEmotion == null
@@ -357,7 +364,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                           child: FilterChip(
                             label: Text(
                               data['name'],
-                              style: GoogleFonts.notoSans(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color: filterEmotion == emotion
@@ -414,7 +422,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                         Expanded(
                           child: Text(
                             '아직 기록된 감정이 없어서 샘플 데이터를 보여드려요!',
-                            style: GoogleFonts.jua(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 13,
                               color: isDark
                                   ? LifewispColors.darkPurple
@@ -543,7 +552,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                       diary.diary.length > 30
                           ? '${diary.diary.substring(0, 30)}...'
                           : diary.diary,
-                      style: GoogleFonts.jua(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: isDark ? LifewispColors.darkMainText : LifewispColors.darkGray,
@@ -569,7 +579,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                           ),
                           child: Text(
                             category,
-                            style: GoogleFonts.jua(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 11,
                               color: color,
                               fontWeight: FontWeight.w500,
@@ -590,7 +601,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                         SizedBox(width: 4),
                         Text(
                           '${diary.date.month}월 ${diary.date.day}일',
-                          style: GoogleFonts.jua(
+                          style: LifewispTextStyles.getStaticFont(
+                            context,
                             fontSize: 13,
                             color: isDark ? LifewispColors.darkSubText : Color(0xFF9CA3AF),
                           ),
@@ -606,7 +618,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
                           ),
                           Text(
                             ' ${diary.imagePaths!.length}',
-                            style: GoogleFonts.jua(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 12,
                               color: color,
                               fontWeight: FontWeight.w600,
@@ -664,7 +677,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
           SizedBox(height: 24),
           Text(
             '아직 기록된 감정이 없어요',
-            style: GoogleFonts.jua(
+            style: LifewispTextStyles.getStaticFont(
+              context,
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: isDark ? LifewispColors.darkMainText : LifewispColors.darkGray,
@@ -673,7 +687,8 @@ class _DiaryListScreenState extends State<DiaryListScreen> with TickerProviderSt
           SizedBox(height: 8),
           Text(
             '첫 번째 감정을 기록해보세요!',
-            style: GoogleFonts.jua(
+            style: LifewispTextStyles.getStaticFont(
+              context,
               fontSize: 14,
               color: isDark ? LifewispColors.darkSubText : Color(0xFF9CA3AF),
             ),

@@ -314,7 +314,8 @@ class _AdvancedAnalysisScreenState extends State<AdvancedAnalysisScreen>
               SizedBox(width: 12),
               Text(
                 'AI 상담 인사이트',
-                style: GoogleFonts.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
@@ -340,7 +341,8 @@ class _AdvancedAnalysisScreenState extends State<AdvancedAnalysisScreen>
                 Expanded(
                   child: Text(
                     insight,
-                    style: GoogleFonts.jua(
+                    style: LifewispTextStyles.getStaticFont(
+                      context,
                       fontSize: 14,
                       color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                       height: 1.5,
@@ -881,9 +883,6 @@ class _AdvancedAnalysisScreenState extends State<AdvancedAnalysisScreen>
             RabbitEmoticon(
               emotion: _convertEmojiToRabbitEmotion(emoji),
               size: 20,
-              backgroundColor: Colors.transparent,
-              borderColor: Colors.transparent,
-              borderWidth: 0,
             ),
             SizedBox(height: 4),
             Text(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 // 🌸 온보딩 기반 메인 색상 (파스텔 그라데이션 테마)
 final pastelPink = Color(0xFFFFE5F1); // 연한 핑크
@@ -84,9 +86,10 @@ Map<String, Color> emotionColorNameFor(BuildContext context) {
   };
 }
 
+// 정적 테마 (기본값) - Poor Story를 기본 폰트로 설정
 ThemeData appTheme = ThemeData(
   useMaterial3: true,
-  fontFamily: GoogleFonts.jua().fontFamily,
+  fontFamily: GoogleFonts.poorStory().fontFamily, // Poor Story를 기본 폰트로 설정
   scaffoldBackgroundColor: Color(0xFFFCFCFD),
   primaryColor: brightPink,
   colorScheme: ColorScheme.fromSeed(
@@ -106,7 +109,7 @@ ThemeData appTheme = ThemeData(
     backgroundColor: Colors.transparent,
     elevation: 0,
     centerTitle: true,
-    titleTextStyle: GoogleFonts.jua(
+    titleTextStyle: GoogleFonts.poorStory(
       fontSize: 22,
       color: darkText,
       fontWeight: FontWeight.bold,
@@ -127,7 +130,7 @@ ThemeData appTheme = ThemeData(
       backgroundColor: brightPink,
       foregroundColor: whiteText,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-      textStyle: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600),
+      textStyle: GoogleFonts.poorStory(fontSize: 18, fontWeight: FontWeight.w600),
       elevation: 3,
       shadowColor: brightPink.withOpacity(0.3),
     ),
@@ -153,22 +156,22 @@ ThemeData appTheme = ThemeData(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: brightPink, width: 2),
     ),
-    hintStyle: GoogleFonts.jua(color: lightText),
+    hintStyle: GoogleFonts.poorStory(color: lightText),
   ),
-  textTheme: GoogleFonts.juaTextTheme().copyWith(
-    bodyMedium: GoogleFonts.jua(fontSize: 16, color: darkText),
-    bodyLarge: GoogleFonts.jua(fontSize: 18, color: darkText),
-    titleLarge: GoogleFonts.jua(fontSize: 22, color: darkText, fontWeight: FontWeight.w600),
-    titleMedium: GoogleFonts.jua(fontSize: 18, color: darkText, fontWeight: FontWeight.w500),
-    labelLarge: GoogleFonts.jua(fontSize: 16, color: mediumText),
-    bodySmall: GoogleFonts.jua(fontSize: 14, color: mediumText),
+  textTheme: GoogleFonts.poorStoryTextTheme().copyWith(
+    bodyMedium: GoogleFonts.poorStory(fontSize: 16, color: darkText),
+    bodyLarge: GoogleFonts.poorStory(fontSize: 18, color: darkText),
+    titleLarge: GoogleFonts.poorStory(fontSize: 22, color: darkText, fontWeight: FontWeight.w600),
+    titleMedium: GoogleFonts.poorStory(fontSize: 18, color: darkText, fontWeight: FontWeight.w500),
+    labelLarge: GoogleFonts.poorStory(fontSize: 16, color: mediumText),
+    bodySmall: GoogleFonts.poorStory(fontSize: 14, color: mediumText),
   ),
 );
 
 ThemeData lifewispDarkTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
-  fontFamily: GoogleFonts.jua().fontFamily,
+  fontFamily: GoogleFonts.poorStory().fontFamily, // Poor Story를 기본 폰트로 설정
   scaffoldBackgroundColor: darkBackground,
   primaryColor: darkPink,
   colorScheme: ColorScheme.fromSeed(
@@ -188,7 +191,7 @@ ThemeData lifewispDarkTheme = ThemeData(
     backgroundColor: Colors.transparent,
     elevation: 0,
     centerTitle: true,
-    titleTextStyle: GoogleFonts.jua(
+    titleTextStyle: GoogleFonts.poorStory(
       fontSize: 22,
       color: whiteText,
       fontWeight: FontWeight.bold,
@@ -209,7 +212,7 @@ ThemeData lifewispDarkTheme = ThemeData(
       backgroundColor: darkPink,
       foregroundColor: whiteText,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-      textStyle: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600),
+      textStyle: GoogleFonts.poorStory(fontSize: 18, fontWeight: FontWeight.w600),
       elevation: 3,
       shadowColor: darkPink.withOpacity(0.3),
     ),
@@ -235,15 +238,15 @@ ThemeData lifewispDarkTheme = ThemeData(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: darkPink, width: 2),
     ),
-    hintStyle: GoogleFonts.jua(color: Color(0xFF9CA3AF)),
+    hintStyle: GoogleFonts.poorStory(color: Color(0xFF9CA3AF)),
   ),
-  textTheme: GoogleFonts.juaTextTheme().copyWith(
-    bodyMedium: GoogleFonts.jua(fontSize: 16, color: whiteText),
-    bodyLarge: GoogleFonts.jua(fontSize: 18, color: whiteText),
-    titleLarge: GoogleFonts.jua(fontSize: 22, color: whiteText, fontWeight: FontWeight.w600),
-    titleMedium: GoogleFonts.jua(fontSize: 18, color: whiteText, fontWeight: FontWeight.w500),
-    labelLarge: GoogleFonts.jua(fontSize: 16, color: Color(0xFFD1D5DB)),
-    bodySmall: GoogleFonts.jua(fontSize: 14, color: Color(0xFFD1D5DB)),
+  textTheme: GoogleFonts.poorStoryTextTheme().copyWith(
+    bodyMedium: GoogleFonts.poorStory(fontSize: 16, color: whiteText),
+    bodyLarge: GoogleFonts.poorStory(fontSize: 18, color: whiteText),
+    titleLarge: GoogleFonts.poorStory(fontSize: 22, color: whiteText, fontWeight: FontWeight.w600),
+    titleMedium: GoogleFonts.poorStory(fontSize: 18, color: whiteText, fontWeight: FontWeight.w500),
+    labelLarge: GoogleFonts.poorStory(fontSize: 16, color: Color(0xFFD1D5DB)),
+    bodySmall: GoogleFonts.poorStory(fontSize: 14, color: Color(0xFFD1D5DB)),
   ),
 );
 
@@ -292,21 +295,21 @@ class LifewispColors {
   static const Color green = Color(0xFF10B981);
   static const Color red = Color(0xFFEF4444);
 
-  static const Color primary = Color(0xFFFF6B9D);
+  static const Color primary = Color(0xFFF88EB2);
   static const Color secondary = Color(0xFF9B59B6);
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
-  static const Color danger = Color(0xFFEF4444);
-  static const Color success = Color(0xFF10B981);
+  static const Color danger = Color(0xFFF67171);
+  static const Color success = Color(0xFF47BD96);
   static const Color pinkAccent = Color(0xFFFFB6C1);
   static const Color lightPurple = Color(0xFFDDA0DD);
   static const Color lightLavender = Color(0xFFE5DEFF);
   static const Color lavender = Color(0xFFE5DEFF);
-  static const Color accent = Color(0xFFFF6B9D);
+  static const Color accent = Color(0xFFFBB1CA);
   static const Color cardBg = Colors.white;
   static const Color textPrimary = Color(0xFF2D3748);
   static const Color textSecondary = Color(0xFF4A5568);
-  static const Color accentDark = Color(0xFF4F46E5);
+  static const Color accentDark = Color(0xFF9B97E8);
 
   // 🌙 다크 테마 색상
   static const Color darkCardBg = Color(0xFF373843);
@@ -324,18 +327,18 @@ class LifewispColors {
   static const Color darkWhite = Color(0xFFFFFFFF);
   static const Color darkBlack = Color(0xFF1A1B23);
   static const Color darkLightGray = Color(0xFF9297A5);
-  static const Color darkPurple = Color(0xFF6B46C1);
+  static const Color darkPurple = Color(0xFF8D79BC);
   static const Color darkPurpleDark = Color(0xFF553C9A);
   static const Color darkBlue = Color(0xFF3B82F6);
-  static const Color darkPink = Color(0xFFEC4899);
+  static const Color darkPink = Color(0xFFC3799D);
   static const Color darkPinkLight = Color(0xFFF472B6);
   static const Color darkMint = Color(0xFF10B981);
   static const Color darkYellow = Color(0xFFF59E0B);
   static const Color darkOrange = Color(0xFFF97316);
   static const Color darkGreen = Color(0xFF059669);
   static const Color darkRed = Color(0xFFDC2626);
-  static const Color darkPrimary = Color(0xFFEC4899);
-  static const Color darkSecondary = Color(0xFF6B46C1);
+  static const Color darkPrimary = Color(0xFFEC84B7);
+  static const Color darkSecondary = Color(0xFFA085E1);
   static const Color darkWarning = Color(0xFFF59E0B);
   static const Color darkInfo = Color(0xFF3B82F6);
   static const Color darkDanger = Color(0xFFDC2626);
@@ -402,7 +405,7 @@ class LifewispGradients {
   );
 
   static const LinearGradient secondary = LinearGradient(
-    colors: [Color(0xFF9B59B6), Color(0xFF6B46C1)],
+    colors: [Color(0xFFC896DD), Color(0xFFA48DD8)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -421,13 +424,13 @@ class LifewispGradients {
 
   static const LinearGradient background = onboardingBg;
   static const LinearGradient primary = LinearGradient(
-    colors: [Color(0xFFFF6B9D), Color(0xFF9B59B6)],
+    colors: [Color(0xFFF496B6), Color(0xFFBD89D3)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient profileHeaderGradient = LinearGradient(
-    colors: [Color(0xFFFF6B9D), Color(0xFF9B59B6)],
+    colors: [Color(0xFFF1A3BD), Color(0xFFCD9EE1)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -486,154 +489,154 @@ extension GradientDecoration on LinearGradient {
   BoxDecoration get asBoxDecoration => BoxDecoration(gradient: this);
 }
 
-// 🌸 온보딩 파스텔 테마 텍스트 스타일
+// 🌸 온보딩 파스텔 테마 텍스트 스타일 - Poor Story를 기본으로 변경
 class LifewispTextStyles {
-  static final statCard = GoogleFonts.jua(
+  static final statCard = GoogleFonts.poorStory(
     fontSize: 20,
     fontWeight: FontWeight.w700,
     color: LifewispColors.statCardText,
   );
-  static final statCardSub = GoogleFonts.jua(
+  static final statCardSub = GoogleFonts.poorStory(
     fontSize: 12,
     color: LifewispColors.statCardSubText,
   );
-  static final diaryCard = GoogleFonts.jua(
+  static final diaryCard = GoogleFonts.poorStory(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: LifewispColors.diaryCardText,
     height: 1.4,
   );
-  static final diaryCardSub = GoogleFonts.jua(
+  static final diaryCardSub = GoogleFonts.poorStory(
     fontSize: 13,
     color: LifewispColors.diaryCardSubText,
   );
-  static final filterChip = GoogleFonts.jua(
+  static final filterChip = GoogleFonts.poorStory(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     color: LifewispColors.filterChipText,
   );
-  static final filterChipSelected = GoogleFonts.jua(
+  static final filterChipSelected = GoogleFonts.poorStory(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     color: LifewispColors.filterChipTextSelected,
   );
-  static final main = GoogleFonts.jua(
+  static final main = GoogleFonts.poorStory(
     fontSize: 16,
     color: LifewispColors.mainText,
   );
-  static final sub = GoogleFonts.jua(
+  static final sub = GoogleFonts.poorStory(
     fontSize: 14,
     color: LifewispColors.subText,
     height: 1.4,
   );
-  static final accent = GoogleFonts.jua(
+  static final accent = GoogleFonts.poorStory(
     fontSize: 16,
     color: LifewispColors.accentText,
     fontWeight: FontWeight.w700,
   );
-  static final title = GoogleFonts.jua(
+  static final title = GoogleFonts.poorStory(
     fontSize: 22,
     fontWeight: FontWeight.w600,
     color: LifewispColors.mainText,
   );
-  static final titleBold = GoogleFonts.jua(
+  static final titleBold = GoogleFonts.poorStory(
     fontSize: 22,
     fontWeight: FontWeight.bold,
     color: LifewispColors.mainText,
   );
-  static final subtitle = GoogleFonts.jua(
+  static final subtitle = GoogleFonts.poorStory(
     fontSize: 16,
     fontWeight: FontWeight.w500,
     color: LifewispColors.subText,
     height: 1.4,
   );
-  static final body = GoogleFonts.jua(
+  static final body = GoogleFonts.poorStory(
     fontSize: 16,
     color: LifewispColors.mainText,
     height: 1.4,
   );
-  static final buttonBold = GoogleFonts.jua(
+  static final buttonBold = GoogleFonts.poorStory(
     fontSize: 18,
     fontWeight: FontWeight.bold,
     color: LifewispColors.white,
   );
 
   // DARK THEME VARIANTS (가독성 최우선)
-  static final darkStatCard = GoogleFonts.jua(
+  static final darkStatCard = GoogleFonts.poorStory(
     fontSize: 20,
     fontWeight: FontWeight.w700,
     color: LifewispColors.darkCardText,
   );
-  static final darkStatCardSub = GoogleFonts.jua(
+  static final darkStatCardSub = GoogleFonts.poorStory(
     fontSize: 12,
     color: LifewispColors.darkCardSubText,
   );
-  static final darkDiaryCard = GoogleFonts.jua(
+  static final darkDiaryCard = GoogleFonts.poorStory(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: LifewispColors.darkCardText,
     height: 1.4,
   );
-  static final darkDiaryCardSub = GoogleFonts.jua(
+  static final darkDiaryCardSub = GoogleFonts.poorStory(
     fontSize: 13,
     color: LifewispColors.darkCardSubText,
   );
-  static final darkFilterChip = GoogleFonts.jua(
+  static final darkFilterChip = GoogleFonts.poorStory(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     color: LifewispColors.darkFilterChipText,
   );
-  static final darkFilterChipSelected = GoogleFonts.jua(
+  static final darkFilterChipSelected = GoogleFonts.poorStory(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     color: LifewispColors.darkFilterChipTextSelected,
   );
-  static final darkMain = GoogleFonts.jua(
+  static final darkMain = GoogleFonts.poorStory(
     fontSize: 16,
     color: LifewispColors.darkMainText,
   );
-  static final darkSub = GoogleFonts.jua(
+  static final darkSub = GoogleFonts.poorStory(
     fontSize: 14,
     color: LifewispColors.darkSubText,
     height: 1.4,
   );
-  static final darkAccent = GoogleFonts.jua(
+  static final darkAccent = GoogleFonts.poorStory(
     fontSize: 16,
     color: LifewispColors.darkAccentText,
     fontWeight: FontWeight.w700,
   );
-  static final darkTitle = GoogleFonts.jua(
+  static final darkTitle = GoogleFonts.poorStory(
     fontSize: 22,
     fontWeight: FontWeight.w600,
     color: LifewispColors.darkMainText,
   );
-  static final darkTitleBold = GoogleFonts.jua(
+  static final darkTitleBold = GoogleFonts.poorStory(
     fontSize: 22,
     fontWeight: FontWeight.bold,
     color: LifewispColors.darkMainText,
   );
-  static final darkSubtitle = GoogleFonts.jua(
+  static final darkSubtitle = GoogleFonts.poorStory(
     fontSize: 16,
     fontWeight: FontWeight.w500,
     color: LifewispColors.darkSubText,
     height: 1.4,
   );
-  static final darkBody = GoogleFonts.jua(
+  static final darkBody = GoogleFonts.poorStory(
     fontSize: 16,
     color: LifewispColors.darkMainText,
     height: 1.4,
   );
-  static final darkButtonBold = GoogleFonts.jua(
+  static final darkButtonBold = GoogleFonts.poorStory(
     fontSize: 18,
     fontWeight: FontWeight.bold,
     color: LifewispColors.darkWhite,
   );
-  static final caption = GoogleFonts.jua(
+  static final caption = GoogleFonts.poorStory(
     fontSize: 12,
     color: LifewispColors.subText,
     height: 1.2,
   );
-  static final darkCaption = GoogleFonts.jua(
+  static final darkCaption = GoogleFonts.poorStory(
     fontSize: 12,
     color: LifewispColors.darkSubText,
     height: 1.2,
@@ -641,7 +644,7 @@ class LifewispTextStyles {
 
   // 🌸 벚꽃 토끼 온보딩 텍스트 스타일
   static TextStyle onboardingTitle(BuildContext context) =>
-      GoogleFonts.jua(
+      GoogleFonts.poorStory(
         fontSize: 28,
         fontWeight: FontWeight.bold,
         color: Theme.of(context).brightness == Brightness.dark
@@ -650,7 +653,7 @@ class LifewispTextStyles {
       );
 
   static TextStyle onboardingSubtitle(BuildContext context) =>
-      GoogleFonts.jua(
+      GoogleFonts.poorStory(
         fontSize: 18,
         color: Theme.of(context).brightness == Brightness.dark
             ? Color(0xFFE1BEE7)
@@ -658,14 +661,14 @@ class LifewispTextStyles {
       );
 
   static TextStyle onboardingButton(BuildContext context) =>
-      GoogleFonts.jua(
+      GoogleFonts.poorStory(
         fontSize: 18,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       );
 
   static TextStyle onboardingEmotionLabel(BuildContext context) =>
-      GoogleFonts.jua(
+      GoogleFonts.poorStory(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).brightness == Brightness.dark
@@ -674,7 +677,7 @@ class LifewispTextStyles {
       );
 
   static TextStyle onboardingFeatureTitle(BuildContext context) =>
-      GoogleFonts.jua(
+      GoogleFonts.poorStory(
         fontSize: 16,
         fontWeight: FontWeight.bold,
         color: Theme.of(context).brightness == Brightness.dark
@@ -683,22 +686,241 @@ class LifewispTextStyles {
       );
 
   static TextStyle onboardingFeatureSubtitle(BuildContext context) =>
-      GoogleFonts.jua(
+      GoogleFonts.poorStory(
         fontSize: 14,
         color: Theme.of(context).brightness == Brightness.dark
             ? Color(0xFFE1BEE7)
             : Color(0xFF7B1FA2),
       );
 
-  // Helper: GoogleFonts.jua 커스텀 생성자
-  static TextStyle jua({double? fontSize, FontWeight? fontWeight, Color? color, double? height}) {
-    return GoogleFonts.jua(
+  // Helper: 동적 폰트 생성자
+  static TextStyle getFont(BuildContext context, {double? fontSize, FontWeight? fontWeight, Color? color, double? height}) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final fontName = userProvider.selectedFont;
+    final fontSizeMultiplier = userProvider.fontSize / 16.0; // 기본 폰트 크기 16을 기준으로 배율 계산
+
+    // 폰트 크기 조정 (사용자 설정 반영)
+    final adjustedFontSize = fontSize != null ? fontSize * fontSizeMultiplier : null;
+
+    // 선택된 폰트에 따라 GoogleFonts 적용
+    switch (fontName) {
+      case 'Poor Story':
+        return GoogleFonts.poorStory(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Jua':
+        return GoogleFonts.jua(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Noto Sans':
+        return GoogleFonts.notoSans(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Do Hyeon':
+        return GoogleFonts.doHyeon(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Black Han Sans':
+        return GoogleFonts.blackHanSans(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Cute Font':
+        return GoogleFonts.cuteFont(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      default:
+        return GoogleFonts.poorStory( // 기본값을 Poor Story로 변경
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+    }
+  }
+
+  // Helper: GoogleFonts.poorStory 커스텀 생성자 (하위 호환성 유지)
+  static TextStyle poorStory({double? fontSize, FontWeight? fontWeight, Color? color, double? height}) {
+    return GoogleFonts.poorStory(
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
       height: height,
     );
   }
+
+  // Helper: 정적 컨텍스트 없이 사용 가능한 폰트 스타일 생성자
+  // 화면에서 직접 GoogleFonts.poorStory() 대신 사용할 수 있는 함수
+  static TextStyle getStaticFont(BuildContext context, {double? fontSize, FontWeight? fontWeight, Color? color, double? height}) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final fontName = userProvider.selectedFont;
+    final fontSizeMultiplier = userProvider.fontSize / 16.0; // 기본 폰트 크기 16을 기준으로 배율 계산
+
+    // 폰트 크기 조정 (사용자 설정 반영)
+    final adjustedFontSize = fontSize != null ? fontSize * fontSizeMultiplier : null;
+
+    // 선택된 폰트에 따라 GoogleFonts 적용
+    switch (fontName) {
+      case 'Poor Story':
+        return GoogleFonts.poorStory(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Jua':
+        return GoogleFonts.jua(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Noto Sans':
+        return GoogleFonts.notoSans(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Do Hyeon':
+        return GoogleFonts.doHyeon(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Black Han Sans':
+        return GoogleFonts.blackHanSans(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      case 'Cute Font':
+        return GoogleFonts.cuteFont(
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+      default:
+        return GoogleFonts.poorStory( // 기본값을 Poor Story로 변경
+          fontSize: adjustedFontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: height,
+        );
+    }
+  }
+}
+
+// 동적 테마 생성 함수 (사용자 설정 반영) - Poor Story를 기본으로 변경
+ThemeData getAppTheme(BuildContext context, {bool isDark = false}) {
+  final userProvider = Provider.of<UserProvider>(context, listen: false);
+  final fontName = userProvider.selectedFont;
+  final fontSize = userProvider.fontSize;
+  final fontSizeMultiplier = fontSize / 16.0; // 기본 폰트 크기 16을 기준으로 배율 계산
+
+  // 선택된 폰트에 따라 fontFamily 설정
+  String? fontFamily;
+  switch (fontName) {
+    case 'Poor Story':
+      fontFamily = GoogleFonts.poorStory().fontFamily;
+      break;
+    case 'Jua':
+      fontFamily = GoogleFonts.jua().fontFamily;
+      break;
+    case 'Noto Sans':
+      fontFamily = GoogleFonts.notoSans().fontFamily;
+      break;
+    case 'Do Hyeon':
+      fontFamily = GoogleFonts.doHyeon().fontFamily;
+      break;
+    case 'Black Han Sans':
+      fontFamily = GoogleFonts.blackHanSans().fontFamily;
+      break;
+    case 'Cute Font':
+      fontFamily = GoogleFonts.cuteFont().fontFamily;
+      break;
+    default:
+      fontFamily = GoogleFonts.poorStory().fontFamily; // 기본값을 Poor Story로 변경
+  }
+
+  // 기본 테마 가져오기
+  final baseTheme = isDark ? lifewispDarkTheme : appTheme;
+
+  // 텍스트 테마 생성 (폰트 크기 조정)
+  final baseTextTheme = isDark ?
+  GoogleFonts.poorStoryTextTheme(ThemeData.dark().textTheme) :
+  GoogleFonts.poorStoryTextTheme();
+
+  final adjustedTextTheme = baseTextTheme.copyWith(
+    bodyMedium: baseTextTheme.bodyMedium?.copyWith(
+      fontFamily: fontFamily,
+      fontSize: 16 * fontSizeMultiplier,
+    ),
+    bodyLarge: baseTextTheme.bodyLarge?.copyWith(
+      fontFamily: fontFamily,
+      fontSize: 18 * fontSizeMultiplier,
+    ),
+    titleLarge: baseTextTheme.titleLarge?.copyWith(
+      fontFamily: fontFamily,
+      fontSize: 22 * fontSizeMultiplier,
+      fontWeight: FontWeight.w600,
+    ),
+    titleMedium: baseTextTheme.titleMedium?.copyWith(
+      fontFamily: fontFamily,
+      fontSize: 18 * fontSizeMultiplier,
+      fontWeight: FontWeight.w500,
+    ),
+    labelLarge: baseTextTheme.labelLarge?.copyWith(
+      fontFamily: fontFamily,
+      fontSize: 16 * fontSizeMultiplier,
+    ),
+    bodySmall: baseTextTheme.bodySmall?.copyWith(
+      fontFamily: fontFamily,
+      fontSize: 14 * fontSizeMultiplier,
+    ),
+  );
+
+  // 새 테마 생성 (폰트 설정 적용)
+  return baseTheme.copyWith(
+    textTheme: adjustedTextTheme,
+    appBarTheme: baseTheme.appBarTheme.copyWith(
+      titleTextStyle: baseTheme.appBarTheme.titleTextStyle?.copyWith(
+        fontFamily: fontFamily,
+        fontSize: 20 * fontSizeMultiplier,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: baseTheme.elevatedButtonTheme.style?.copyWith(
+        textStyle: MaterialStateProperty.all<TextStyle>(
+          TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 16 * fontSizeMultiplier,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 // Helper: get theme-aware color or style
@@ -758,29 +980,29 @@ extension LifewispTextStylesExt on LifewispTextStyles {
   // 🐰 토끼 감정 표현 스타일
   static TextStyle emotionTitle(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFF8BBD9))
-          : GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF4A148C));
+          ? LifewispTextStyles.getStaticFont(context, fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFF8BBD9))
+          : LifewispTextStyles.getStaticFont(context, fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF4A148C));
 
   static TextStyle emotionSubtitle(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? GoogleFonts.jua(fontSize: 14, color: Color(0xFFE1BEE7))
-          : GoogleFonts.jua(fontSize: 14, color: Color(0xFF7B1FA2));
+          ? LifewispTextStyles.getStaticFont(context, fontSize: 14, color: Color(0xFFE1BEE7))
+          : LifewispTextStyles.getStaticFont(context, fontSize: 14, color: Color(0xFF7B1FA2));
 
   // 🌸 벚꽃 카드 스타일
   static TextStyle cardTitle(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)
-          : GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF4A148C));
+          ? LifewispTextStyles.getStaticFont(context, fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)
+          : LifewispTextStyles.getStaticFont(context, fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF4A148C));
 
   static TextStyle cardSubtitle(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? GoogleFonts.jua(fontSize: 14, color: Color(0xFFE1BEE7))
-          : GoogleFonts.jua(fontSize: 14, color: Color(0xFF7B1FA2));
+          ? LifewispTextStyles.getStaticFont(context, fontSize: 14, color: Color(0xFFE1BEE7))
+          : LifewispTextStyles.getStaticFont(context, fontSize: 14, color: Color(0xFF7B1FA2));
 
   static TextStyle cardContent(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? GoogleFonts.jua(fontSize: 16, color: Colors.white, height: 1.4)
-          : GoogleFonts.jua(fontSize: 16, color: Color(0xFF4A148C), height: 1.4);
+          ? LifewispTextStyles.getStaticFont(context, fontSize: 16, color: Colors.white, height: 1.4)
+          : LifewispTextStyles.getStaticFont(context, fontSize: 16, color: Color(0xFF4A148C), height: 1.4);
 }
 
 extension LifewispColorsExt on LifewispColors {

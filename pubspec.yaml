@@ -57,7 +57,7 @@ dependencies:
   connectivity_plus: ^5.0.2
   package_info_plus: ^4.2.0
   device_info_plus: ^9.1.1
-  # flutter_local_notifications: ^16.3.0
+  flutter_local_notifications: ^17.2.1+2
   timezone: ^0.9.2
   flutter_native_splash: ^2.3.8
   flutter_launcher_icons: ^0.13.1
@@ -76,6 +76,12 @@ dependencies:
   # flutter_datetime_picker: ^1.5.1  # 오래된 패키지로 제거
   flutter_localizations:
     sdk: flutter
+  # Firebase 패키지
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  firebase_auth_web: ^6.0.0
+  cloud_firestore: ^6.0.0
+  google_sign_in: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -104,6 +110,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/emoticons/
+    - assets/google_logo.png
     - .env
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

@@ -161,9 +161,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       children: [
                                         Text(
                                           '안녕하세요!',
-                                          style: TextStyle(
+                                          style: LifewispTextStyles.getStaticFont(
+                                            context,
                                             fontSize: userProvider.fontSize + 4,
-                                            fontFamily: userProvider.selectedFont,
                                             fontWeight: FontWeight.w700,
                                             color: isDark
                                                 ? LifewispColors.darkMainText
@@ -182,7 +182,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                             ),
                                             child: Text(
                                               '✨ 프리미엄',
-                                              style: TextStyle(
+                                              style: LifewispTextStyles.getStaticFont(
+                                                context,
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
                                                 color: Colors.white,
@@ -316,38 +317,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                               builder: (context, child) {
                                 return Transform.scale(
                                   scale: _pulseAnimation.value,
-                                  child: Container(
-                                    width: 70,
-                                    height: 70,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          isDark
-                                              ? LifewispColors.darkPrimary
-                                              : LifewispColors.accent,
-                                          isDark
-                                              ? LifewispColors.darkPrimary.withOpacity(0.7)
-                                              : LifewispColors.accent.withOpacity(0.7),
-                                        ],
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: isDark
-                                              ? LifewispColors.darkPrimary.withOpacity(0.3)
-                                              : LifewispColors.accent.withOpacity(0.3),
-                                          blurRadius: 12,
-                                          offset: Offset(0, 6),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Container(
-                                      padding: EdgeInsets.all(6),
-                                      child: RabbitEmoticon(
-                                        emotion: _mapStringToRabbitEmotion(emoji),
-                                        size: 68,
-                                      ),
-                                    ),
+                                  child: RabbitEmoticon(
+                                    emotion: _mapStringToRabbitEmotion(emoji),
+                                    size: 70,
                                   ),
                                 );
                               },

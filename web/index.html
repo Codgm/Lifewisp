@@ -19,6 +19,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="당신의 하루를 감정으로 기록하고, AI와 함께 회고하는 라이프 아카이빙 도구">
+  <meta name="google-signin-client_id" content="410981489784-kksc1dm7fvr9bom6tkt87s0altfv08pg.apps.googleusercontent.com">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -33,6 +34,33 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- Firebase SDK 추가 (모듈화 방식) -->
+  <script type="module">
+    // Firebase 앱 SDK 가져오기
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    
+    // Firebase 구성 정보는 firebase_options.dart 파일의 값과 일치해야 합니다
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtZd93xb-FsLx07OHhr69a_6pE52xYJQA",
+      authDomain: "lifewisp-app.firebaseapp.com",
+      projectId: "lifewisp-app",
+      storageBucket: "lifewisp-app.appspot.com",
+      messagingSenderId: "410981489784",
+      appId: "1:410981489784:web:a1b2c3d4e5f6g7h8i9j0k1",
+      measurementId: "G-MEASUREMENT_ID"
+    };
+    
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+    
+    // 전역 객체에 Firebase 인스턴스 할당 (Flutter에서 접근 가능하도록)
+    window.firebaseApp = app;
+  </script>
+  
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

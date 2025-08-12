@@ -197,7 +197,8 @@ class AnalysisScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 '감정별 분포',
-                style: LifewispTextStyles.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
@@ -242,7 +243,8 @@ class AnalysisScreen extends StatelessWidget {
                           children: [
                             Text(
                               emotionKoreanNames[entry.key] ?? entry.key,
-                              style: LifewispTextStyles.jua(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
@@ -250,7 +252,8 @@ class AnalysisScreen extends StatelessWidget {
                             ),
                             Text(
                               '${entry.value}회 (${(percent * 100).toStringAsFixed(1)}%)',
-                              style: LifewispTextStyles.jua(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: 12,
                                 color: isDark ? LifewispColors.darkSubText : LifewispColors.gray,
                               ),
@@ -323,7 +326,8 @@ class AnalysisScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 '월간 감정 변화',
-                style: LifewispTextStyles.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
@@ -366,7 +370,8 @@ class AnalysisScreen extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: GoogleFonts.jua(
+                          style: LifewispTextStyles.getStaticFont(
+                            context,
                             fontSize: 10,
                             color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                           ),
@@ -384,7 +389,8 @@ class AnalysisScreen extends StatelessWidget {
                         if (day % 5 == 0 && day <= 30) {
                           return Text(
                             '${day}일',
-                            style: GoogleFonts.jua(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 9,
                               color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                             ),
@@ -607,7 +613,8 @@ class AnalysisScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 '감정 히트맵',
-                style: LifewispTextStyles.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
@@ -689,7 +696,8 @@ class AnalysisScreen extends StatelessWidget {
             child: Center(
               child: Text(
                 '$day',
-                style: GoogleFonts.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 10,
                   color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                 ),
@@ -711,7 +719,8 @@ class AnalysisScreen extends StatelessWidget {
           child: Center(
             child: Text(
               '$day',
-              style: GoogleFonts.jua(
+              style: LifewispTextStyles.getStaticFont(
+                context,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 color: color,
@@ -757,7 +766,8 @@ class AnalysisScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 '특이점 분석',
-                style: LifewispTextStyles.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
@@ -780,7 +790,8 @@ class AnalysisScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       '현재까지는 특별한 패턴이 발견되지 않았어요.\n더 많은 데이터가 쌓이면 흥미로운 인사이트를 발견할 수 있을 거예요!',
-                      style: LifewispTextStyles.jua(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: 14,
                         color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
                       ),
@@ -813,7 +824,8 @@ class AnalysisScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       outlier['message']!,
-                      style: LifewispTextStyles.jua(
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
                         fontSize: 14,
                         color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                       ),

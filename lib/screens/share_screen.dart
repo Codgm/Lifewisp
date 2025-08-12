@@ -254,7 +254,8 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                         Expanded(
                           child: Text(
                             '${displayRecord.date.month}월 ${displayRecord.date.day}일의 감정 기록을 공유카드로 만들었어요!',
-                            style: GoogleFonts.jua(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 13,
                               color: isDark
                                   ? LifewispColors.darkPrimary
@@ -422,18 +423,12 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                                         ),
                                         child: Text(
                                           summary,
-                                          style: GoogleFonts.jua(
+                                          style: LifewispTextStyles.getStaticFont(
+                                            context,
                                             fontSize: 17,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
                                             height: 1.3,
-                                            shadows: [
-                                              Shadow(
-                                                color: Colors.black.withOpacity(0.3),
-                                                offset: const Offset(0, 1),
-                                                blurRadius: 2,
-                                              ),
-                                            ],
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
@@ -468,17 +463,11 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                                           ),
                                           child: Text(
                                             keyword,
-                                            style: GoogleFonts.jua(
+                                            style: LifewispTextStyles.getStaticFont(
+                                              context,
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
                                               color: Colors.white,
-                                              shadows: [
-                                                Shadow(
-                                                  color: Colors.black.withOpacity(0.3),
-                                                  offset: const Offset(0, 1),
-                                                  blurRadius: 2,
-                                                ),
-                                              ],
                                             ),
                                           ),
                                         )).toList(),
@@ -497,17 +486,11 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                                         ),
                                         child: Text(
                                           '${displayRecord.date.year}.${displayRecord.date.month.toString().padLeft(2, '0')}.${displayRecord.date.day.toString().padLeft(2, '0')}',
-                                          style: GoogleFonts.jua(
+                                          style: LifewispTextStyles.getStaticFont(
+                                            context,
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
                                             color: Colors.white.withOpacity(0.9),
-                                            shadows: [
-                                              Shadow(
-                                                color: Colors.black.withOpacity(0.2),
-                                                offset: const Offset(0, 1),
-                                                blurRadius: 2,
-                                              ),
-                                            ],
                                           ),
                                         ),
                                       ),
@@ -528,7 +511,8 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                 // 테마 선택 섹션
                 Text(
                   '테마 선택',
-                  style: GoogleFonts.jua(
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: isDark
@@ -606,17 +590,11 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                             Center(
                               child: Text(
                                 theme['name'],
-                                style: GoogleFonts.jua(
+                                style: LifewispTextStyles.getStaticFont(
+                                  context,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      offset: const Offset(0, 1),
-                                      blurRadius: 2,
-                                    ),
-                                  ],
                                 ),
                               ),
                             ),
@@ -690,7 +668,8 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                                     const Icon(Icons.download_done, color: Colors.white),
                                     const SizedBox(width: 8),
                                     Text('갤러리에 저장됐어요! 📸',
-                                        style: GoogleFonts.jua(
+                                        style: LifewispTextStyles.getStaticFont(
+                                          context,
                                           fontWeight: FontWeight.w500,
                                         )
                                     ),
@@ -709,7 +688,8 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                           icon: const Icon(Icons.save_alt, color: Colors.white),
                           label: Text(
                             '저장',
-                            style: GoogleFonts.jua(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -756,7 +736,8 @@ class _ShareScreenState extends State<ShareScreen> with TickerProviderStateMixin
                           icon: Icon(Icons.share, color: selectedThemeData['accent']),
                           label: Text(
                             '공유',
-                            style: GoogleFonts.jua(
+                            style: LifewispTextStyles.getStaticFont(
+                              context,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: selectedThemeData['accent'],

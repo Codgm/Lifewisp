@@ -2,8 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <!-- 알림 권한 설명 -->
+    <key>NSUserNotificationAlertStyle</key>
+    <string>alert</string>
+    <!-- 카메라 권한 (프로필 사진용) -->
+    <key>NSCameraUsageDescription</key>
+    <string>프로필 사진을 촬영하기 위해 카메라 접근이 필요합니다.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<!-- 사진 라이브러리 권한 -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>프로필 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.</string>
+
+    <!-- 알림 관련 설정 -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>background-fetch</string>
+        <string>background-processing</string>
+    </array>
 	<key>CFBundleDisplayName</key>
 	<string>Lifewisp</string>
 	<key>CFBundleExecutable</key>

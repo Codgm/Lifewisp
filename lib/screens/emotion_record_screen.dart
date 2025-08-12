@@ -64,6 +64,53 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
     }
   };
 
+  IconData _getCategoryItemIcon(String item) {
+    switch (item) {
+    // 건강 카테고리
+      case '운동완료': return Icons.fitness_center;
+      case '충분한수면': return Icons.bedtime;
+      case '건강식단': return Icons.local_dining;
+      case '금연': return Icons.smoke_free;
+      case '금주': return Icons.no_drinks;
+      case '명상': return Icons.self_improvement;
+
+    // 성취 카테고리
+      case '목표달성': return Icons.flag;
+      case '새로운도전': return Icons.rocket_launch;
+      case '학습완료': return Icons.school;
+      case '업무성공': return Icons.work;
+      case '창작활동': return Icons.palette;
+      case '문제해결': return Icons.lightbulb;
+
+    // 관계 카테고리
+      case '가족시간': return Icons.family_restroom;
+      case '친구만남': return Icons.group;
+      case '연인데이트': return Icons.favorite;
+      case '새로운인연': return Icons.handshake;
+      case '소통': return Icons.chat;
+      case '배려': return Icons.volunteer_activism;
+
+    // 취미 카테고리
+      case '독서': return Icons.menu_book;
+      case '영화감상': return Icons.movie;
+      case '음악감상': return Icons.music_note;
+      case '요리': return Icons.restaurant;
+      case '여행': return Icons.flight;
+      case '게임': return Icons.sports_esports;
+
+    // 기타 카테고리
+      case '날씨좋음': return Icons.wb_sunny;
+      case '맛있는음식': return Icons.restaurant_menu;
+      case '좋은소식': return Icons.celebration;
+      case '선물받음': return Icons.card_giftcard;
+      case '휴식': return Icons.weekend;
+      case '반성': return Icons.psychology;
+
+      default: return Icons.circle;
+    }
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -126,6 +173,55 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
     super.dispose();
   }
 
+  // 반응형 도우미 메서드들
+  double _getScreenWidth(BuildContext context) => MediaQuery.of(context).size.width;
+  double _getScreenHeight(BuildContext context) => MediaQuery.of(context).size.height;
+  bool _isSmallScreen(BuildContext context) => _getScreenWidth(context) < 600;
+  bool _isMediumScreen(BuildContext context) => _getScreenWidth(context) >= 600 && _getScreenWidth(context) < 1024;
+  bool _isLargeScreen(BuildContext context) => _getScreenWidth(context) >= 1024;
+
+  double _getResponsivePadding(BuildContext context) {
+    if (_isSmallScreen(context)) return 16.0;
+    if (_isMediumScreen(context)) return 32.0;
+    return 48.0;
+  }
+
+  double _getResponsiveCardPadding(BuildContext context) {
+    if (_isSmallScreen(context)) return 16.0;
+    if (_isMediumScreen(context)) return 20.0;
+    return 24.0;
+  }
+
+  double _getResponsiveFontSize(BuildContext context, double baseFontSize) {
+    if (_isSmallScreen(context)) return baseFontSize * 0.9;
+    if (_isMediumScreen(context)) return baseFontSize;
+    return baseFontSize * 1.1;
+  }
+
+  int _getCrossAxisCount(BuildContext context) {
+    if (_isSmallScreen(context)) return 4;
+    if (_isMediumScreen(context)) return 5;
+    return 6;
+  }
+
+// 그리고 이모티콘 크기도 약간 조정하는 것이 좋습니다:
+  double _getEmotionSize(BuildContext context) {
+    if (_isSmallScreen(context)) return 55.0;
+    if (_isMediumScreen(context)) return 65.0;
+    return 75.0;
+  }
+
+  double _getPhotoSize(BuildContext context) {
+    if (_isSmallScreen(context)) return 100.0;
+    if (_isMediumScreen(context)) return 120.0;
+    return 140.0;
+  }
+
+  double _getMaxWidth(BuildContext context) {
+    if (_isLargeScreen(context)) return 800.0;
+    return double.infinity;
+  }
+
   // Web-compatible image widget
   Widget _buildImageWidget(dynamic image, {double? width, double? height, BoxFit? fit}) {
     if (kIsWeb) {
@@ -171,7 +267,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
         );
       }
     }
-    
+
     // Fallback
     return Container(
       width: width,
@@ -188,6 +284,8 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userProvider = context.watch<UserProvider>();
+    final screenWidth = _getScreenWidth(context);
+    final maxWidth = _getMaxWidth(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -201,61 +299,66 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
         ),
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // 날짜 선택 섹션
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildDateSection(isDark),
+          child: Center(
+            child: Container(
+              width: maxWidth,
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.all(_getResponsivePadding(context)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // 날짜 선택 섹션
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: _buildDateSection(isDark),
+                      ),
+
+                      SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+
+                      // 감정 선택 섹션
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: _buildEmotionSection(isDark),
+                      ),
+
+                      SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+
+                      // 카테고리 선택 섹션
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: _buildCategorySection(isDark),
+                      ),
+
+                      SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+
+                      // 사진 업로드 섹션
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: _buildPhotoSection(isDark),
+                      ),
+
+                      SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+
+                      // 일기 입력 섹션
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: _buildDiarySection(isDark),
+                      ),
+
+                      SizedBox(height: _isSmallScreen(context) ? 24 : 32),
+
+                      // 저장 버튼
+                      ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: _buildSaveButton(isDark),
+                      ),
+
+                      SizedBox(height: 20),
+                    ],
                   ),
-
-                  SizedBox(height: 24),
-
-                  // 감정 선택 섹션
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildEmotionSection(isDark),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  // 카테고리 선택 섹션
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildCategorySection(isDark),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  // 사진 업로드 섹션
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildPhotoSection(isDark),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  // 일기 입력 섹션
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildDiarySection(isDark),
-                  ),
-
-                  SizedBox(height: 32),
-
-                  // 저장 버튼
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: _buildSaveButton(isDark),
-                  ),
-
-                  SizedBox(height: 20),
-                ],
+                ),
               ),
             ),
           ),
@@ -266,7 +369,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
 
   Widget _buildDateSection(bool isDark) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(_getResponsiveCardPadding(context)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -281,14 +384,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             Colors.white.withOpacity(0.85),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 8),
+            blurRadius: _isSmallScreen(context) ? 15 : 20,
+            offset: Offset(0, _isSmallScreen(context) ? 6 : 8),
           ),
         ],
         border: isDark
@@ -299,7 +402,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(_isSmallScreen(context) ? 10 : 12),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
@@ -311,42 +414,46 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             child: Icon(
               Icons.calendar_today_rounded,
               color: Colors.white,
-              size: 20,
+              size: _isSmallScreen(context) ? 18 : 20,
             ),
           ),
-          SizedBox(width: 16),
-          TextButton(
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: selectedDate,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: Theme.of(context).colorScheme.copyWith(
-                        primary: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+          SizedBox(width: _isSmallScreen(context) ? 12 : 16),
+          Flexible(
+            child: TextButton(
+              onPressed: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                        ),
                       ),
-                    ),
-                    child: child!,
-                  );
-                },
-              );
-              if (picked != null) {
-                setState(() {
-                  selectedDate = picked;
-                });
-              }
-            },
-            child: Text(
-              '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: isDark
-                    ? LifewispColors.darkMainText
-                    : LifewispColors.mainText,
+                      child: child!,
+                    );
+                  },
+                );
+                if (picked != null) {
+                  setState(() {
+                    selectedDate = picked;
+                  });
+                }
+              },
+              child: Text(
+                '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
+                style: LifewispTextStyles.getStaticFont(
+                  context,
+                  fontSize: _getResponsiveFontSize(context, 18),
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? LifewispColors.darkMainText
+                      : LifewispColors.mainText,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -355,9 +462,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
     );
   }
 
+  // _buildEmotionSection 메서드를 다음과 같이 수정하세요:
+
   Widget _buildEmotionSection(bool isDark) {
+    final emotionSize = _getEmotionSize(context);
+    final crossAxisCount = _getCrossAxisCount(context);
+
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(_getResponsiveCardPadding(context)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -372,14 +484,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             Colors.white.withOpacity(0.85),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 8),
+            blurRadius: _isSmallScreen(context) ? 15 : 20,
+            offset: Offset(0, _isSmallScreen(context) ? 6 : 8),
           ),
         ],
         border: isDark
@@ -393,25 +505,30 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             children: [
               Text(
                 '😊',
-                style: TextStyle(fontSize: 24),
+                style: LifewispTextStyles.getStaticFont(context, fontSize: _isSmallScreen(context) ? 20 : 24),
               ),
-              SizedBox(width: 12),
-              Text(
-                '오늘의 기분은 어떠세요?',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? LifewispColors.darkMainText
-                      : LifewispColors.mainText,
+              SizedBox(width: _isSmallScreen(context) ? 8 : 12),
+              Flexible(
+                child: Text(
+                  '오늘의 기분은 어떠세요?',
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
+                    fontSize: _getResponsiveFontSize(context, 18),
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? LifewispColors.darkMainText
+                        : LifewispColors.mainText,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 24),
+          SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+          // Wrap 사용으로 변경
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: _isSmallScreen(context) ? 8 : 12,
+            runSpacing: _isSmallScreen(context) ? 12 : 16,
             alignment: WrapAlignment.center,
             children: emotionEmoji.entries.map((e) {
               final isSelected = selectedEmotion == e.key;
@@ -421,55 +538,64 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
                     selectedEmotion = e.key;
                   });
                 },
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
-                  width: 65,
-                  height: 65,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: isSelected
-                        ? LinearGradient(
-                      colors: isDark
-                          ? [LifewispColors.darkPrimary, LifewispColors.darkPrimary.withOpacity(0.7)]
-                          : [LifewispColors.accent, LifewispColors.accent.withOpacity(0.7)],
-                    )
-                        : LinearGradient(
-                      colors: isDark
-                          ? [LifewispColors.darkCardBg.withOpacity(0.8), LifewispColors.darkCardBg.withOpacity(0.6)]
-                          : [Colors.white.withOpacity(0.9), Colors.white.withOpacity(0.7)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isSelected
-                            ? (isDark
-                            ? LifewispColors.darkPrimary.withOpacity(0.4)
-                            : LifewispColors.accent.withOpacity(0.3))
-                            : (isDark
-                            ? Colors.black.withOpacity(0.2)
-                            : Colors.black.withOpacity(0.06)),
-                        blurRadius: isSelected ? 12 : 6,
-                        offset: Offset(0, isSelected ? 6 : 3),
-                      ),
-                    ],
-                    border: isSelected
-                        ? Border.all(
-                      color: isDark
-                          ? LifewispColors.darkPrimary.withOpacity(0.5)
-                          : LifewispColors.accent.withOpacity(0.4),
-                      width: 2,
-                    )
-                        : Border.all(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.black.withOpacity(0.05),
-                      width: 1,
-                    ),
-                  ),
+                child: AnimatedScale(
+                  scale: isSelected ? 1.1 : 1.0,
+                  duration: Duration(milliseconds: 200),
                   child: Container(
-                    padding: EdgeInsets.all(6),
-                    child: RabbitEmoticon(
-                      emotion: _mapStringToRabbitEmotion(e.key),
-                      size: 50,
+                    width: emotionSize + 20, // 고정 너비로 overflow 방지
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 이모티콘 컨테이너 - 선택 상태에 따른 배경
+                        Container(
+                          padding: EdgeInsets.all(_isSmallScreen(context) ? 8 : 12),
+                          decoration: isSelected ? BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [LifewispColors.darkPrimary.withOpacity(0.2), LifewispColors.darkPrimary.withOpacity(0.1)]
+                                  : [LifewispColors.accent.withOpacity(0.2), LifewispColors.accent.withOpacity(0.1)],
+                            ),
+                            border: Border.all(
+                              color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                              width: 2,
+                            ),
+                          ) : null,
+                          child: RabbitEmoticon(
+                            emotion: _mapStringToRabbitEmotion(e.key),
+                            size: emotionSize * 0.7, // 크기 조정
+                          ),
+                        ),
+                        SizedBox(height: _isSmallScreen(context) ? 6 : 8),
+                        // 선택된 상태를 나타내는 인디케이터
+                        Container(
+                          height: _isSmallScreen(context) ? 3 : 4,
+                          width: _isSmallScreen(context) ? 30 : 40,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (isDark ? LifewispColors.darkPrimary : LifewispColors.accent)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        SizedBox(height: _isSmallScreen(context) ? 4 : 6),
+                        // 감정 텍스트
+                        Text(
+                          e.key,
+                          style: LifewispTextStyles.getStaticFont(
+                            context,
+                            fontSize: _getResponsiveFontSize(context, _isSmallScreen(context) ? 11 : 12),
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? (isDark ? LifewispColors.darkPrimary : LifewispColors.accent)
+                                : (isDark ? LifewispColors.darkSubText : LifewispColors.subText),
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -483,7 +609,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
 
   Widget _buildCategorySection(bool isDark) {
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(_getResponsiveCardPadding(context)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -498,14 +624,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             Colors.white.withOpacity(0.85),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 8),
+            blurRadius: _isSmallScreen(context) ? 15 : 20,
+            offset: Offset(0, _isSmallScreen(context) ? 6 : 8),
           ),
         ],
         border: isDark
@@ -519,22 +645,25 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             children: [
               Text(
                 '🏷️',
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: _isSmallScreen(context) ? 20 : 24),
               ),
-              SizedBox(width: 12),
-              Text(
-                '오늘 하루를 간단히 표현해보세요',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? LifewispColors.darkMainText
-                      : LifewispColors.mainText,
+              SizedBox(width: _isSmallScreen(context) ? 8 : 12),
+              Flexible(
+                child: Text(
+                  '오늘 하루를 간단히 표현해보세요',
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
+                    fontSize: _getResponsiveFontSize(context, 18),
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? LifewispColors.darkMainText
+                        : LifewispColors.mainText,
+                  ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 20),
+          SizedBox(height: _isSmallScreen(context) ? 16 : 20),
           ...categories.entries.map((category) => _buildCategoryGroup(category, isDark)).toList(),
         ],
       ),
@@ -546,19 +675,29 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.symmetric(vertical: _isSmallScreen(context) ? 8 : 12),
           child: Row(
             children: [
-              Icon(
-                category.value['icon'],
-                size: 18,
-                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+              Container( // 아이콘을 컨테이너로 감싸서 배경 추가
+                padding: EdgeInsets.all(_isSmallScreen(context) ? 6 : 8),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? LifewispColors.darkPrimary.withOpacity(0.1)
+                      : LifewispColors.accent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  category.value['icon'],
+                  size: _isSmallScreen(context) ? 16 : 18,
+                  color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: 12),
               Text(
                 category.key,
-                style: TextStyle(
-                  fontSize: 16,
+                style: LifewispTextStyles.getStaticFont(
+                  context,
+                  fontSize: _getResponsiveFontSize(context, 16),
                   fontWeight: FontWeight.w600,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
                 ),
@@ -567,8 +706,8 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
           ),
         ),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: _isSmallScreen(context) ? 6 : 8,
+          runSpacing: _isSmallScreen(context) ? 6 : 8,
           children: (category.value['items'] as List<String>).map((item) {
             final isSelected = selectedCategories.contains(item);
             return GestureDetector(
@@ -583,7 +722,10 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
               },
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                    horizontal: _isSmallScreen(context) ? 12 : 16,
+                    vertical: _isSmallScreen(context) ? 8 : 10 // 패딩 조정
+                ),
                 decoration: BoxDecoration(
                   gradient: isSelected
                       ? LinearGradient(
@@ -596,7 +738,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
                         ? [LifewispColors.darkCardBg.withOpacity(0.6), LifewispColors.darkCardBg.withOpacity(0.4)]
                         : [Colors.grey.withOpacity(0.1), Colors.grey.withOpacity(0.05)],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
                   border: Border.all(
                     color: isSelected
                         ? (isDark ? LifewispColors.darkPrimary : LifewispColors.accent)
@@ -604,28 +746,44 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
-                child: Text(
-                  item,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? LifewispColors.darkSubText : LifewispColors.subText),
-                  ),
+                child: Row( // 아이콘과 텍스트를 나란히 배치
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getCategoryItemIcon(item), // 개별 아이템 아이콘 함수
+                      size: _isSmallScreen(context) ? 14 : 16,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? LifewispColors.darkSubText : LifewispColors.subText),
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      item,
+                      style: LifewispTextStyles.getStaticFont(
+                        context,
+                        fontSize: _getResponsiveFontSize(context, 14),
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? LifewispColors.darkSubText : LifewispColors.subText),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
           }).toList(),
         ),
-        SizedBox(height: 16),
+        SizedBox(height: _isSmallScreen(context) ? 12 : 16),
       ],
     );
   }
 
   Widget _buildPhotoSection(bool isDark) {
+    final photoSize = _getPhotoSize(context);
+
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(_getResponsiveCardPadding(context)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -640,14 +798,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             Colors.white.withOpacity(0.85),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 8),
+            blurRadius: _isSmallScreen(context) ? 15 : 20,
+            offset: Offset(0, _isSmallScreen(context) ? 6 : 8),
           ),
         ],
         border: isDark
@@ -661,57 +819,61 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             children: [
               Text(
                 '📷',
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: _isSmallScreen(context) ? 20 : 24),
               ),
-              SizedBox(width: 12),
-              Text(
-                '소중한 순간을 사진으로 남겨보세요',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? LifewispColors.darkMainText
-                      : LifewispColors.mainText,
+              SizedBox(width: _isSmallScreen(context) ? 8 : 12),
+              Flexible(
+                child: Text(
+                  '소중한 순간을 사진으로 남겨보세요',
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
+                    fontSize: _getResponsiveFontSize(context, 18),
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? LifewispColors.darkMainText
+                        : LifewispColors.mainText,
+                  ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 20),
+          SizedBox(height: _isSmallScreen(context) ? 16 : 20),
           if ((kIsWeb ? selectedImageBytes.isNotEmpty : selectedImages.isNotEmpty)) ...[
             Container(
-              height: 120,
+              height: photoSize,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: (kIsWeb ? selectedImageBytes.length : selectedImages.length) + 1,
                 itemBuilder: (context, index) {
                   if (index == (kIsWeb ? selectedImageBytes.length : selectedImages.length)) {
-                    return _buildAddPhotoButton(isDark);
+                    return _buildAddPhotoButton(isDark, photoSize);
                   }
                   return _buildPhotoItem(
-                    kIsWeb ? selectedImageBytes[index] : selectedImages[index], 
-                    index, 
-                    isDark
+                      kIsWeb ? selectedImageBytes[index] : selectedImages[index],
+                      index,
+                      isDark,
+                      photoSize
                   );
                 },
               ),
             ),
           ] else ...[
-            _buildAddPhotoButton(isDark),
+            _buildAddPhotoButton(isDark, photoSize),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildAddPhotoButton(bool isDark) {
+  Widget _buildAddPhotoButton(bool isDark, double size) {
     return GestureDetector(
       onTap: _showImagePicker,
       child: Container(
-        width: 120,
-        height: 120,
-        margin: EdgeInsets.only(right: 12),
+        width: size,
+        height: size,
+        margin: EdgeInsets.only(right: _isSmallScreen(context) ? 8 : 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 12 : 16),
           border: Border.all(
             color: isDark ? LifewispColors.darkPrimary.withOpacity(0.4) : LifewispColors.accent.withOpacity(0.4),
             width: 2,
@@ -728,14 +890,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
           children: [
             Icon(
               Icons.add_photo_alternate_outlined,
-              size: 32,
+              size: _isSmallScreen(context) ? 24 : 32,
               color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
             ),
-            SizedBox(height: 8),
+            SizedBox(height: _isSmallScreen(context) ? 4 : 8),
             Text(
               '사진 추가',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: _getResponsiveFontSize(context, 12),
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
               ),
@@ -746,13 +908,13 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
     );
   }
 
-  Widget _buildPhotoItem(dynamic image, int index, bool isDark) {
+  Widget _buildPhotoItem(dynamic image, int index, bool isDark, double size) {
     return Container(
-      width: 120,
-      height: 120,
-      margin: EdgeInsets.only(right: 12),
+      width: size,
+      height: size,
+      margin: EdgeInsets.only(right: _isSmallScreen(context) ? 8 : 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 12 : 16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -764,17 +926,17 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
       child: Stack(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 12 : 16),
             child: _buildImageWidget(
               image,
-              width: 120,
-              height: 120,
+              width: size,
+              height: size,
               fit: BoxFit.cover,
             ),
           ),
           Positioned(
-            top: 8,
-            right: 8,
+            top: _isSmallScreen(context) ? 6 : 8,
+            right: _isSmallScreen(context) ? 6 : 8,
             child: GestureDetector(
               onTap: () {
                 setState(() {
@@ -786,7 +948,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
                 });
               },
               child: Container(
-                padding: EdgeInsets.all(4),
+                padding: EdgeInsets.all(_isSmallScreen(context) ? 3 : 4),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.6),
                   shape: BoxShape.circle,
@@ -794,7 +956,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
                 child: Icon(
                   Icons.close,
                   color: Colors.white,
-                  size: 16,
+                  size: _isSmallScreen(context) ? 14 : 16,
                 ),
               ),
             ),
@@ -806,7 +968,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
 
   Widget _buildDiarySection(bool isDark) {
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(_getResponsiveCardPadding(context)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -821,14 +983,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             Colors.white.withOpacity(0.85),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.black.withOpacity(0.3)
                 : Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: Offset(0, 8),
+            blurRadius: _isSmallScreen(context) ? 15 : 20,
+            offset: Offset(0, _isSmallScreen(context) ? 6 : 8),
           ),
         ],
         border: isDark
@@ -842,26 +1004,28 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             children: [
               Text(
                 '✍️',
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: _isSmallScreen(context) ? 20 : 24),
               ),
-              SizedBox(width: 12),
-              Text(
-                '더 자세한 이야기가 있다면?',
-                style: TextStyle(
-                  fontSize: context.watch<UserProvider>().fontSize + 2,
-                  fontFamily: context.watch<UserProvider>().selectedFont,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? LifewispColors.darkMainText
-                      : LifewispColors.mainText,
+              SizedBox(width: _isSmallScreen(context) ? 8 : 12),
+              Flexible(
+                child: Text(
+                  '더 자세한 이야기가 있다면?',
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
+                    fontSize: _getResponsiveFontSize(context, context.watch<UserProvider>().fontSize + 2),
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? LifewispColors.darkMainText
+                        : LifewispColors.mainText,
+                  ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 20),
+          SizedBox(height: _isSmallScreen(context) ? 16 : 20),
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 12 : 16),
               gradient: LinearGradient(
                 colors: isDark
                     ? [
@@ -876,27 +1040,28 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             ),
             child: TextField(
               controller: _controller,
-              maxLines: 6,
+              maxLines: _isSmallScreen(context) ? 5 : 6,
               decoration: InputDecoration(
                 hintText: '오늘 하루의 특별한 순간이나 느낌을\n자유롭게 적어보세요...',
-                hintStyle: TextStyle(
+                hintStyle: LifewispTextStyles.getStaticFont(
+                  context,
                   color: isDark
                       ? LifewispColors.darkSubText.withOpacity(0.7)
                       : LifewispColors.subText.withOpacity(0.7),
-                  fontSize: 15,
+                  fontSize: _getResponsiveFontSize(context, 15),
                   height: 1.5,
                 ),
                 filled: true,
                 fillColor: Colors.transparent,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 12 : 16),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: EdgeInsets.all(20),
+                contentPadding: EdgeInsets.all(_isSmallScreen(context) ? 16 : 20),
               ),
-              style: TextStyle(
-                fontSize: context.watch<UserProvider>().fontSize - 1,
-                fontFamily: context.watch<UserProvider>().selectedFont,
+              style: LifewispTextStyles.getStaticFont(
+                context,
+                fontSize: _getResponsiveFontSize(context, context.watch<UserProvider>().fontSize - 1),
                 height: 1.6,
                 color: isDark
                     ? LifewispColors.darkMainText
@@ -917,7 +1082,8 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
 
     return Container(
       width: double.infinity,
-      height: 60,
+      height: _isSmallScreen(context) ? 50 : 60,
+      constraints: BoxConstraints(maxWidth: 400),
       decoration: BoxDecoration(
         gradient: hasContent
             ? LinearGradient(
@@ -932,15 +1098,15 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
               ? [Colors.grey.withOpacity(0.3), Colors.grey.withOpacity(0.2)]
               : [Colors.grey.withOpacity(0.3), Colors.grey.withOpacity(0.2)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
         boxShadow: hasContent
             ? [
           BoxShadow(
             color: isDark
                 ? LifewispColors.darkPrimary.withOpacity(0.4)
                 : LifewispColors.accent.withOpacity(0.4),
-            blurRadius: 20,
-            offset: Offset(0, 10),
+            blurRadius: _isSmallScreen(context) ? 15 : 20,
+            offset: Offset(0, _isSmallScreen(context) ? 8 : 10),
           ),
         ]
             : [],
@@ -977,7 +1143,7 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 16 : 20),
           ),
           disabledBackgroundColor: Colors.transparent,
         ),
@@ -987,13 +1153,14 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
             Icon(
               widget.isEdit ? Icons.edit_rounded : Icons.save_rounded,
               color: hasContent ? Colors.white : Colors.grey,
-              size: 24,
+              size: _isSmallScreen(context) ? 20 : 24,
             ),
-            SizedBox(width: 12),
+            SizedBox(width: _isSmallScreen(context) ? 8 : 12),
             Text(
               widget.isEdit ? '수정하기' : '저장하기',
-              style: TextStyle(
-                fontSize: 18,
+              style: LifewispTextStyles.getStaticFont(
+                context,
+                fontSize: _getResponsiveFontSize(context, 18),
                 fontWeight: FontWeight.w700,
                 color: hasContent ? Colors.white : Colors.grey,
               ),
@@ -1008,10 +1175,11 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
-          padding: EdgeInsets.all(24),
+          padding: EdgeInsets.all(_getResponsiveCardPadding(context)),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -1020,52 +1188,72 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
                   ? [LifewispColors.darkCardBg, LifewispColors.darkCardBg.withOpacity(0.9)]
                   : [Colors.white, Colors.white.withOpacity(0.95)],
             ),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(_isSmallScreen(context) ? 20 : 24)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.4) : Colors.grey.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              SizedBox(height: 24),
-              Text(
-                '사진 선택',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
-                ),
-              ),
-              SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildImageSourceButton(
-                      icon: Icons.camera_alt,
-                      label: '카메라',
-                      onTap: () => _pickImage(ImageSource.camera),
-                      isDark: isDark,
-                    ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withOpacity(0.4) : Colors.grey.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: _buildImageSourceButton(
-                      icon: Icons.photo_library,
-                      label: '갤러리',
-                      onTap: () => _pickImage(ImageSource.gallery),
-                      isDark: isDark,
-                    ),
+                ),
+                SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+                Text(
+                  '사진 선택',
+                  style: TextStyle(
+                    fontSize: _getResponsiveFontSize(context, 20),
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                  ),
+                ),
+                SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+                if (_isSmallScreen(context)) ...[
+                  // Stack buttons vertically on small screens
+                  _buildImageSourceButton(
+                    icon: Icons.camera_alt,
+                    label: '카메라',
+                    onTap: () => _pickImage(ImageSource.camera),
+                    isDark: isDark,
+                  ),
+                  SizedBox(height: 12),
+                  _buildImageSourceButton(
+                    icon: Icons.photo_library,
+                    label: '갤러리',
+                    onTap: () => _pickImage(ImageSource.gallery),
+                    isDark: isDark,
+                  ),
+                ] else ...[
+                  // Side by side on larger screens
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildImageSourceButton(
+                          icon: Icons.camera_alt,
+                          label: '카메라',
+                          onTap: () => _pickImage(ImageSource.camera),
+                          isDark: isDark,
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: _buildImageSourceButton(
+                          icon: Icons.photo_library,
+                          label: '갤러리',
+                          onTap: () => _pickImage(ImageSource.gallery),
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-              SizedBox(height: 24),
-            ],
+                SizedBox(height: _isSmallScreen(context) ? 16 : 24),
+              ],
+            ),
           ),
         );
       },
@@ -1081,14 +1269,16 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.symmetric(
+            vertical: _isSmallScreen(context) ? 16 : 20
+        ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
                 ? [LifewispColors.darkPrimary.withOpacity(0.1), LifewispColors.darkPrimary.withOpacity(0.05)]
                 : [LifewispColors.accent.withOpacity(0.1), LifewispColors.accent.withOpacity(0.05)],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_isSmallScreen(context) ? 12 : 16),
           border: Border.all(
             color: isDark ? LifewispColors.darkPrimary.withOpacity(0.3) : LifewispColors.accent.withOpacity(0.3),
           ),
@@ -1097,14 +1287,15 @@ class _EnhancedEmotionRecordScreenState extends State<EmotionRecordScreen> with 
           children: [
             Icon(
               icon,
-              size: 32,
+              size: _isSmallScreen(context) ? 28 : 32,
               color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
             ),
-            SizedBox(height: 8),
+            SizedBox(height: _isSmallScreen(context) ? 6 : 8),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 16,
+              style: LifewispTextStyles.getStaticFont(
+                context,
+                fontSize: _getResponsiveFontSize(context, 16),
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
               ),

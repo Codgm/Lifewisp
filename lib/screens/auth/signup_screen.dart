@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
-import '../dashboard_screen.dart';
+import 'login_screen.dart';
 import '../../utils/theme.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
+  final nicknameController = TextEditingController();
   bool isLoading = false;
   String? error;
 
@@ -44,6 +46,10 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
   @override
   void dispose() {
     _animationController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmController.dispose();
+    nicknameController.dispose();
     super.dispose();
   }
 
@@ -71,9 +77,9 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFFF6B9D),
-              Color(0xFF9B59B6),
-              Color(0xFF3498DB),
+              Color(0xFFF897B8),
+              Color(0xFFDBAEED),
+              Color(0xFFBEDCF1),
             ],
           ),
         ),
@@ -121,15 +127,16 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    Color(0xFFFF6B9D),
-                                    Color(0xFF9B59B6),
-                                    Color(0xFF3498DB),
+                                    Color(0xFFF8A5C1),
+                                    Color(0xFFD2A6E4),
+                                    Color(0xFF97C3E1),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(25),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D)).withOpacity(0.3),
+                                    color: (isDark ? LifewispColors.darkPink : Color(
+                                        0xFFF49CBA)).withOpacity(0.3),
                                     blurRadius: 20,
                                     offset: Offset(0, 10),
                                   ),
@@ -197,18 +204,19 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                               ).createShader(bounds),
                                               child: Text(
                                                 'Lifewisp',
-                                                style: GoogleFonts.jua(
+                                                style: LifewispTextStyles.getStaticFont(
+                                                  context,
                                                   fontSize: isWide ? 40 : 32,
                                                   fontWeight: FontWeight.w800,
                                                   color: Colors.white,
-                                                  letterSpacing: 1.2,
                                                 ),
                                               ),
                                             ),
                                             SizedBox(height: isWide ? 12 : 8),
                                             Text(
                                               '당신의 감정 여행을 시작해보세요!',
-                                              style: GoogleFonts.jua(
+                                              style: LifewispTextStyles.getStaticFont(
+                                                context,
                                                 fontSize: isWide ? 18 : 16,
                                                 color: Colors.white.withOpacity(0.9),
                                                 fontWeight: FontWeight.w600,
@@ -261,6 +269,17 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                       ),
                                       SizedBox(height: isWide ? 24 : 20),
 
+                                      // 닉네임 입력
+                                      _buildTextField(
+                                        controller: nicknameController,
+                                        label: '닉네임',
+                                        icon: Icons.person_outline,
+                                        keyboardType: TextInputType.name,
+                                        isWide: isWide,
+                                        isDark: isDark,
+                                      ),
+                                      SizedBox(height: isWide ? 24 : 20),
+
                                       // 비밀번호 입력
                                       _buildTextField(
                                         controller: passwordController,
@@ -304,7 +323,8 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                               Expanded(
                                                 child: Text(
                                                   error!,
-                                                  style: GoogleFonts.jua(
+                                                  style: LifewispTextStyles.getStaticFont(
+                                                    context,
                                                     color: isDark ? LifewispColors.darkRed : Colors.red,
                                                     fontSize: isWide ? 16 : 14,
                                                   ),
@@ -326,12 +346,14 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                             end: Alignment.bottomRight,
                                             colors: isDark
                                                 ? [LifewispColors.darkPink, LifewispColors.darkPurple]
-                                                : [Color(0xFFFF6B9D), Color(0xFF9B59B6)],
+                                                : [Color(0xFFEC94B2), Color(
+                                                0xFFD397EC)],
                                           ),
                                           borderRadius: BorderRadius.circular(isWide ? 32 : 28),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: (isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D)).withOpacity(0.4),
+                                              color: (isDark ? LifewispColors.darkPink : Color(
+                                                  0xFFEF95B3)).withOpacity(0.4),
                                               blurRadius: 15,
                                               offset: const Offset(0, 8),
                                             ),
@@ -362,7 +384,8 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                               SizedBox(width: isWide ? 12 : 8),
                                               Text(
                                                 '회원가입하기',
-                                                style: GoogleFonts.jua(
+                                                style: LifewispTextStyles.getStaticFont(
+                                                  context,
                                                   fontSize: isWide ? 20 : 18,
                                                   fontWeight: FontWeight.w700,
                                                   color: Colors.white,
@@ -382,7 +405,8 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                           color: isDark ? LifewispColors.darkCardBg : Colors.white,
                                           borderRadius: BorderRadius.circular(isWide ? 32 : 28),
                                           border: Border.all(
-                                            color: (isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D)).withOpacity(0.3),
+                                            color: (isDark ? LifewispColors.darkPink : Color(
+                                                0xFFFA94B6)).withOpacity(0.3),
                                             width: 2,
                                           ),
                                           boxShadow: [
@@ -409,10 +433,12 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                               SizedBox(width: isWide ? 12 : 8),
                                               Text(
                                                 '이미 계정이 있어요',
-                                                style: GoogleFonts.jua(
+                                                style: LifewispTextStyles.getStaticFont(
+                                                  context,
                                                   fontSize: isWide ? 18 : 16,
                                                   fontWeight: FontWeight.w600,
-                                                  color: isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D),
+                                                  color: isDark ? LifewispColors.darkPink : Color(
+                                                      0xFFFA97B8),
                                                 ),
                                               ),
                                             ],
@@ -442,7 +468,8 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                                             SizedBox(width: isWide ? 12 : 8),
                                             Text(
                                               '안전하고 개인적인 감정 기록',
-                                              style: GoogleFonts.jua(
+                                              style: LifewispTextStyles.getStaticFont(
+                                                context,
                                                 fontSize: isWide ? 16 : 14,
                                                 color: isDark ? LifewispColors.darkPurple : Color(0xFF9B59B6),
                                                 fontWeight: FontWeight.w600,
@@ -498,13 +525,15 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: GoogleFonts.jua(
+        style: LifewispTextStyles.getStaticFont(
+          context,
           fontSize: isWide ? 18 : 16,
           color: isDark ? LifewispColors.darkMainText : LifewispColors.textPrimary,
         ),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: GoogleFonts.jua(
+          labelStyle: LifewispTextStyles.getStaticFont(
+            context,
             fontSize: isWide ? 16 : 14,
             color: isDark ? LifewispColors.darkSubText : LifewispColors.textSecondary,
           ),
@@ -529,7 +558,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
             ),
             child: Icon(
               icon,
-              color: isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D),
+              color: isDark ? LifewispColors.darkPink : Color(0xFFFA9DBC),
               size: isWide ? 24 : 20,
             ),
           ),
@@ -540,7 +569,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(
-              color: isDark ? LifewispColors.darkPink : Color(0xFFFF6B9D),
+              color: isDark ? LifewispColors.darkPink : Color(0xFFFAA0BE),
               width: 2,
             ),
           ),
@@ -556,6 +585,22 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
   }
 
   Future<void> _handleSignUp() async {
+    // 입력값 검증
+    if (emailController.text.trim().isEmpty) {
+      setState(() { error = '이메일을 입력해주세요.'; });
+      return;
+    }
+    
+    if (nicknameController.text.trim().isEmpty) {
+      setState(() { error = '닉네임을 입력해주세요.'; });
+      return;
+    }
+    
+    if (passwordController.text.isEmpty) {
+      setState(() { error = '비밀번호를 입력해주세요.'; });
+      return;
+    }
+    
     if (passwordController.text != confirmController.text) {
       setState(() { error = '비밀번호가 일치하지 않습니다.'; });
       return;
@@ -563,30 +608,35 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
 
     setState(() { isLoading = true; error = null; });
 
-    // 애니메이션 효과
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final success = await userProvider.signup(
+    try {
+      // Firebase Auth Provider 사용
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.signUp(
         emailController.text.trim(),
-        passwordController.text.trim()
-    );
-
-    setState(() { isLoading = false; });
-
-    if (success) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => DashboardScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
+        passwordController.text.trim(),
+        nicknameController.text.trim(),
       );
-    } else {
-      setState(() { error = '회원가입에 실패했습니다. 다시 시도해주세요.'; });
+
+      setState(() { isLoading = false; });
+
+      if (success) {
+        // 회원가입 성공 시 로그인 화면으로 이동
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() { 
+        isLoading = false; 
+        error = e.toString();
+      });
     }
   }
 }

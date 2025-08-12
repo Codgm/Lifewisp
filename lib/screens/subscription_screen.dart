@@ -411,7 +411,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                           if (index == 1) // 연간 플랜
                                             Text(
                                               '월 ₩3,325',
-                                              style: GoogleFonts.notoSans(
+                                              style: LifewispTextStyles.getStaticFont(
+                                                context,
                                                 fontSize: 12,
                                                 color: Colors.green,
                                                 fontWeight: FontWeight.w500,
@@ -613,9 +614,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               child: RabbitEmoticon(
                 emotion: _convertEmojiToRabbitEmotion(emoji),
                 size: 24,
-                backgroundColor: Colors.transparent,
-                borderColor: Colors.transparent,
-                borderWidth: 0,
               ),
             ),
           ),

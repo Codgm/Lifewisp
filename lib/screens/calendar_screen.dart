@@ -260,7 +260,8 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
         ),
         Text(
           '${selectedDate.year}년 ${selectedDate.month}월',
-          style: GoogleFonts.notoSans(
+          style: LifewispTextStyles.getStaticFont(
+            context,
             fontSize: headerFontSize,
             fontWeight: FontWeight.w600,
             color: isDark ? LifewispColors.darkMainText : LifewispColors.darkGray,
@@ -296,7 +297,8 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
             alignment: Alignment.center,
             child: Text(
               day,
-              style: GoogleFonts.notoSans(
+              style: LifewispTextStyles.getStaticFont(
+                context,
                 fontSize: weekdayFontSize,
                 fontWeight: FontWeight.w600,
                 color: isDark ? LifewispColors.darkSubText : Colors.grey[600],
@@ -376,71 +378,58 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // 감정 동그라미
+                            // 감정 표시 부분
                             Container(
                               width: circleSize,
                               height: circleSize,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: emotionInfo != null
-                                    ? emotionInfo['color'].withOpacity(0.15)
-                                    : Colors.transparent,
-                                border: Border.all(
-                                  color: isToday
-                                      ? (isDark ? LifewispColors.darkPrimary : LifewispColors.primary)
-                                      : emotionInfo != null
-                                      ? emotionInfo['color']
-                                      : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
-                                  width: isToday ? 2.5 : (emotionInfo != null ? 2 : 1),
+                              child: emotion.isNotEmpty
+                                  ? RabbitEmoticon(
+                                emotion: _mapStringToRabbitEmotion(emotion),
+                                size: circleSize,
+                              )
+                                  : Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isToday
+                                        ? (isDark ? LifewispColors.darkPrimary : LifewispColors.primary)
+                                        : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                                    width: isToday ? 2.5 : 1,
+                                  ),
+                                  boxShadow: isToday ? [
+                                    BoxShadow(
+                                      color: (isDark ? LifewispColors.darkPrimary : LifewispColors.primary).withOpacity(0.3),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ] : [],
                                 ),
-                                boxShadow: emotionInfo != null ? [
-                                  BoxShadow(
-                                    color: emotionInfo['color'].withOpacity(0.3),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                                child: isToday
+                                    ? Center(
+                                  child: Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isDark ? LifewispColors.darkPrimary : LifewispColors.primary,
+                                    ),
                                   ),
-                                ] : isToday ? [
-                                  BoxShadow(
-                                    color: (isDark ? LifewispColors.darkPrimary : LifewispColors.primary).withOpacity(0.3),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ] : [],
+                                )
+                                    : null,
                               ),
-                              child: emotionInfo != null
-                                  ? ClipOval(
-                                child: RabbitEmoticon(
-                                  emotion: _mapStringToRabbitEmotion(emotion),
-                                  size: circleSize - 4, // 테두리 고려하여 약간 작게
-                                  backgroundColor: Colors.transparent,
-                                  borderColor: Colors.transparent,
-                                  borderWidth: 0,
-                                ),
-                              )
-                                  : isToday
-                                  ? Center(
-                                child: Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isDark ? LifewispColors.darkPrimary : LifewispColors.primary,
-                                  ),
-                                ),
-                              )
-                                  : null,
                             ),
                             const SizedBox(height: 4),
                             // 날짜 숫자
                             Text(
                               '$dayNum',
-                              style: GoogleFonts.notoSans(
+                              style: LifewispTextStyles.getStaticFont(
+                                context,
                                 fontSize: screenWidth > 600 ? 12 : 11,
                                 fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
                                 color: isToday
                                     ? (isDark ? LifewispColors.darkPrimary : LifewispColors.primary)
-                                    : emotionInfo != null
-                                    ? emotionInfo['color']
+                                    : emotion.isNotEmpty
+                                    ? emotionInfo!['color']
                                     : (isDark ? LifewispColors.darkSubText : Colors.grey[700]),
                               ),
                             ),
@@ -500,7 +489,8 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
                 const SizedBox(width: 8),
                 Text(
                   '이번 달 감정 인사이트',
-                  style: GoogleFonts.notoSans(
+                  style: LifewispTextStyles.getStaticFont(
+                    context,
                     fontSize: titleFontSize,
                     fontWeight: FontWeight.w600,
                     color: LifewispColors.white,
@@ -511,7 +501,8 @@ class _CalendarScreenState extends State<CalendarScreen> with TickerProviderStat
             SizedBox(height: screenWidth > 600 ? 16 : 12),
             Text(
               '이번 달에는 긍정적인 감정이 많이 나타났어요! 😊\n특히 주말에 행복한 순간들이 많았답니다.',
-              style: GoogleFonts.notoSans(
+              style: LifewispTextStyles.getStaticFont(
+                context,
                 fontSize: contentFontSize,
                 color: LifewispColors.white.withOpacity(0.9),
                 height: 1.5,

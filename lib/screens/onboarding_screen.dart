@@ -366,27 +366,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
     return Column(
       children: [
-        Container(
-          width: 45,
-          height: 45,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isDark ? LifewispColors.darkCardBg : Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: (isDark ? Colors.black : Colors.black)
-                    .withOpacity(isDark ? 0.3 : 0.1),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Center(
-            child: RabbitEmoticon(
-              emotion: _mapStringToRabbitEmotion(emoji),
-              size: 32,
-            ),
-          ),
+        // Container 배경 완전 제거하고 RabbitEmoticon만 표시
+        RabbitEmoticon(
+          emotion: _mapStringToRabbitEmotion(emoji),
+          size: 32,
         ),
         SizedBox(height: 6),
         Text(

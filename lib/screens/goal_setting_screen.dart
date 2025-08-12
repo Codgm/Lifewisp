@@ -112,7 +112,8 @@ class _GoalSettingScreenState extends State<GoalSettingScreen> {
               const SizedBox(width: 12),
               Text(
                 'AI 추천 목표',
-                style: LifewispTextStyles.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
@@ -193,7 +194,8 @@ class _GoalSettingScreenState extends State<GoalSettingScreen> {
               const SizedBox(width: 12),
               Text(
                 '직접 목표 설정',
-                style: LifewispTextStyles.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
@@ -394,7 +396,8 @@ class _GoalSettingScreenState extends State<GoalSettingScreen> {
               const SizedBox(width: 12),
               Text(
                 '현재 목표 (${goals.length}개)',
-                style: LifewispTextStyles.jua(
+                style: LifewispTextStyles.getStaticFont(
+                  context,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? LifewispColors.darkMainText : LifewispColors.purple,
