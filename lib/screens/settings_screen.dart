@@ -498,26 +498,61 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
   }
 
   Widget _buildAccountSection(UserProvider userProvider, bool isDark) {
-    return _buildSection(
-      title: '👤 계정 설정',
-      children: [
-        _buildTile(
-          icon: Icons.subscriptions,
-          title: '구독 관리',
-          subtitle: '프리미엄 구독을 관리해요',
-          onTap: () => _showSubscriptionDialog(context, userProvider),
+    return Consumer<SubscriptionProvider>(
+      builder: (context, subscription, child) {
+        return _buildSection(
+          title: '👤 계정 설정',
+          children: [
+            // 구독 관리 타일 (상태 표시 개선)
+            _buildTileWithTrailing(
+              icon: subscription.isPremium ? Icons.workspace_premium : Icons.subscriptions,
+              title: '구독 관리',
+              subtitle: subscription.isPremium
+                  ? '프리미엄 구독 중 • 클라우드 백업 활성'
+                  : '무료 버전 • 로컬 저장만 가능',
+              trailing: subscription.isPremium
+                  ? Icon(Icons.verified, color: Colors.amber, size: 20)
+                  : Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              onTap: () => _showSubscriptionDialog(context, userProvider),
+              isDark: isDark,
+            ),
+            _buildDivider(isDark),
+
+            // 클라우드 백업 상태 타일 (새로 추가)
+            _buildTileWithTrailing(
+              icon: subscription.canUseCloudStorage ? Icons.cloud_done : Icons.cloud_off,
+              title: '클라우드 백업',
+              subtitle: subscription.canUseCloudStorage
+                  ? '감정 기록이 안전하게 백업됩니다'
+                  : '프리미엄으로 업그레이드하여 클라우드 백업을 이용하세요',
+              trailing: subscription.canUseCloudStorage
+                  ? Icon(Icons.check_circle, color: Colors.green, size: 20)
+                  : TextButton(
+                onPressed: () => _showUpgradeDialog(context, subscription),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  minimumSize: Size(0, 0),
+                ),
+                child: Text('업그레이드', style: TextStyle(fontSize: 12)),
+              ),
+              onTap: subscription.canUseCloudStorage
+                  ? null
+                  : () => _showUpgradeDialog(context, subscription),
+              isDark: isDark,
+            ),
+            _buildDivider(isDark),
+
+            _buildTile(
+              icon: Icons.lock_reset,
+              title: '비밀번호 재설정',
+              subtitle: '비밀번호를 변경할 수 있어요',
+              onTap: () => _showPasswordResetDialog(context),
+              isDark: isDark,
+            ),
+          ],
           isDark: isDark,
-        ),
-        _buildDivider(isDark),
-        _buildTile(
-          icon: Icons.lock_reset,
-          title: '비밀번호 재설정',
-          subtitle: '비밀번호를 변경할 수 있어요',
-          onTap: () => _showPasswordResetDialog(context),
-          isDark: isDark,
-        ),
-      ],
-      isDark: isDark,
+        );
+      },
     );
   }
 
@@ -666,6 +701,173 @@ class _EnhancedSettingsScreenState extends State<SettingsScreen> with SingleTick
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTileWithTrailing({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Widget trailing,
+    VoidCallback? onTap,
+    required bool isDark,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? LifewispColors.darkPrimary : LifewispColors.accent).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isDark ? LifewispColors.darkPrimary : LifewispColors.accent,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: LifewispTextStyles.getStaticFont(context,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? LifewispColors.darkMainText : LifewispColors.mainText,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: LifewispTextStyles.getStaticFont(context,
+                      fontSize: 14,
+                      color: isDark ? LifewispColors.darkSubText : LifewispColors.subText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpgradeBenefit(String benefit) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.check_circle, size: 16, color: Colors.green),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              benefit,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 업그레이드 다이얼로그 메서드
+  void _showUpgradeDialog(BuildContext context, SubscriptionProvider subscription) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.cloud_upload, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('클라우드 백업'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '프리미엄으로 업그레이드하면:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 12),
+            _buildUpgradeBenefit('자동 클라우드 백업으로 데이터 안전 보장'),
+            _buildUpgradeBenefit('여러 기기에서 동기화'),
+            _buildUpgradeBenefit('무제한 AI 채팅'),
+            _buildUpgradeBenefit('고급 분석 기능'),
+            SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    '월 ₩9,900',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Text(
+                    '언제든지 취소 가능',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('나중에'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final success = await subscription.upgradeToPremium();
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('🎉 프리미엄 구독이 활성화되었습니다!'),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text('구독하기'),
+          ),
+        ],
       ),
     );
   }
